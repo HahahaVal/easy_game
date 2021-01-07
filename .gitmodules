@@ -1,6 +1,6 @@
-[submodule "skynet"]
-	path = skynet
-	url = https://github.com/HahahaVal/skynet.git
 [submodule "comm/sprotodump"]
 	path = comm/sprotodump
 	url = https://github.com/HahahaVal/sprotodump.git
+[submodule "skynet"]
+	path = skynet
+	url = https://github.com/HahahaVal/skynet.git
