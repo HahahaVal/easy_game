@@ -1,0 +1,9 @@
+bin/
+build/
+*.so
+*.o
+*.lo
+*.so.*
+*.a
+*.la
+lualib/sproto_list.lua

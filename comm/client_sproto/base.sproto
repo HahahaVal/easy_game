@@ -1,0 +1,9 @@
+# range (0, 0)
+# package
+
+.pack {
+    type 0: integer
+    session 1: integer
+    ud 2: integer
+    errcode 3: integer
+}

@@ -1,0 +1,18 @@
+include "./share_config"
+
+
+-- entry point
+start = "master_main"	-- main script
+
+-- variable
+thread = 12
+logger = nil
+logpath = "."
+harbor = 0
+
+
+serverid = 1
+start_msg = "/dev/shm/troy/start_msg"
+console_port = 10000
+login_port = 10002
+proxy_address = "0.0.0.0:10001"
