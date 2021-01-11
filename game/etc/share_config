@@ -20,3 +20,6 @@ max_agent = 10000
 agent_pool_count= 12
 
 agent_pool_threshold = 10000
+
+-- database
+mongodb = branch .. "etc/mongodb.config"

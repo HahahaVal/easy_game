@@ -30,7 +30,7 @@ function M.unregister(address)
 end
 
 function M.start_info(ok, errmsg)
-    local file_path = assert(Skynet.getenv("start_msg"), "start_msg")
+    local file_path = assert(Skynet.getenv("start_msg"))
     local file = io.open(file_path, "w+")
     assert(file)
     local msg = ok and "_start_ok_" or errmsg

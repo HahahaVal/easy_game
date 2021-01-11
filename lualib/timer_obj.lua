@@ -8,7 +8,7 @@ function mt:add_timer(interval, func, times)
     assert(interval >= self.check_sec, interval)
     local handle = self.handle
     self.handle = handle + 1
-    interval = interval * 100 -- 转为0.01s单位
+    interval = interval * 100
     self.timers[handle] = {
         interval = interval, 
         func = func, 
@@ -21,7 +21,7 @@ end
 function mt:timeout(interval, func)
     local handle = self.handle
     self.handle = handle + 1
-    interval = interval * 100 -- 转为0.01s单位
+    interval = interval * 100
     self.timers[handle] = {
         interval = interval, 
         func = func, 

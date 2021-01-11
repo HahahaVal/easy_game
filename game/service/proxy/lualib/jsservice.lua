@@ -1,4 +1,3 @@
-
 local Skynet = require "znet"
 local Json   = require "lualib.json"
 local Driver = require "skynet.socketdriver"

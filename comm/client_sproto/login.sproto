@@ -4,24 +4,11 @@
 .Cator {
     uid 0: integer
     roleid 1: integer
-    serverid 2: integer
 }
 
-login 100 {
-    request {
-        token 0: string
-        client_version 1: string
-    }
-    response {
-        errcode   0: integer
-        roleid    1: integer # 角色id, 如果为0, 需要创建角色
-    }
-}
-
-login_game 101 {
+login_game 100 {
     request {
         cator 0: Cator
-        client_version 1: string
     }
     response {
         errcode   0: integer
@@ -29,14 +16,21 @@ login_game 101 {
     }
 }
 
-create_role 102 {
+create_role 101 {
     request {
         name     0: string
-        sex      1: integer
-        serverid 2: integer
     }
     response {
         errcode 0: integer
         roleid  1: integer
     }
+}
+
+enter_game 102 {
+    response {
+        errcode 0: integer
+    }
+}
+
+leave_game 103 {
 }

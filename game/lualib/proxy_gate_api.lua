@@ -24,9 +24,9 @@ end
 local M = {}
 
 function M.new(listen_addrs, tag, max)
-    local self = {}
-    self.gate = assert(Skynet.newservice("proxy_gate", "S", Skynet.self(), listen_addrs, tag, max))
-    return setmetatable(self, mt)
+    local obj = {}
+    obj.gate = assert(Skynet.newservice("proxy_gate", "S", Skynet.self(), listen_addrs, tag, max))
+    return setmetatable(obj, mt)
 end
 
 return M

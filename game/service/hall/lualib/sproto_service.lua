@@ -13,7 +13,7 @@ service.PTYPE_SPROTO_NAME = "sproto"
 service.PTYPE_SPROTO      = 100
 
 
-local file = assert(Skynet.getenv("protopath"), "protopath")
+local file = assert(Skynet.getenv("protopath"))
 SprotoLoader.save(io.input(file):read("a"), 1)
 local client_proto = SprotoLoader.load(1)
 local client = client_proto:host "base.pack"

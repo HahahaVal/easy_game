@@ -22,7 +22,7 @@ local function __init__()
     end)
 
     --gate
-    local proxy_address = assert(Skynet.getenv("proxy_address"), "proxy_address")
+    local proxy_address = assert(Skynet.getenv("proxy_address"))
     Env.gate = GateApi.new(proxy_address, JsService.PTYPE_JSON, 1024)
     Env.conns= Connection.new(Env.gate)
 
