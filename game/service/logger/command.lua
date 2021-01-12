@@ -1,7 +1,7 @@
 local Skynet = require "znet"
 
 local log_path  = Skynet.getenv("log_path")
-
+os.execute("mkdir ".. log_path)
 
 local function _file_path(date)
 	return string.format("%s%04d-%02d-%02d-%02d.log", log_path, date.year, date.month, date.day, date.hour)
