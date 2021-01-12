@@ -3,6 +3,7 @@ local Connection = require "connection"
 local RoleApi = require "role_api"
 local RoleFactory = require "role_factory" 
 local Skynet = require "znet"
+local Log = require "log_api"
 
 local mt = {}
 mt.__index = mt
@@ -69,7 +70,9 @@ function mt:leave_game(reason)
 
     local fd = self.session:get_fd()
     local ok, destroyed = pcall(Skynet.call, agent, "lua", "stop", fd, reason)
-
+    if not ok or not destroyed then
+        Log.error("role leave_game fail")
+    end
     Env.agent_pool:put(self.uid)
 end
 

@@ -13,12 +13,13 @@ luaservice = branch.."service/?.lua;" .. branch.."service/?/main.lua;" .. root..
 
 bootstrap = "snlua bootstrap"	-- The service for bootstrap
 
+
+-- sproto
 protopath = root .. "build/sproto/sproto.spb"
 
+-- agent
 max_agent = 10000
-
 agent_pool_count= 12
-
 agent_pool_threshold = 10000
 
 -- database

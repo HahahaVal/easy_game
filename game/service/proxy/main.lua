@@ -7,10 +7,10 @@ local Env       = require "global"
 local JsService = require "lualib.jsservice"
 local Connection= require "connection"
 local GmWeb     = require "service.gm_web"
-
+local Log = require "log_api"
 
 local function atexit()
-    print("proxy exit")
+    Log.info("proxy exit")
 end
 
 Skynet.register_protocol(Protocol[Protocol.PTYPE_GATE_NAME])

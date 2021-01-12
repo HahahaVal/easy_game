@@ -1,5 +1,6 @@
 local Skynet = require "skynet"
 local Env    = require "global"
+local Log = require "log_api"
 
 local M = {}
 
@@ -41,19 +42,19 @@ end
 
 -- 先注册的服务后关闭
 function M.shutdown()
-    print("system begin shutdown")
+    Log.info("system begin shutdown")
     Env.is_shutdown = true
 
     for i=#Env.addr_list, 1, -1 do
         local address = Env.addr_list[i]
-        print("shutdown service, catalog:", Env.addr_catalog[address], "address: ", address)
+        Log.info("shutdown service, catalog:%s,address:%s ", Env.addr_catalog[address], address)
         Skynet.send(address, "sys", "EXIT")
     end
     local waitcount = 0
     while true do
         if #Env.addr_list > 0 then
             if waitcount <= 0 then
-                print("waiting all service exit left:", #Env.addr_list)                
+                Log.info("waiting all service exit left:%s", #Env.addr_list)                
                 waitcount = 100
             end            
             waitcount = waitcount - 1

@@ -1,6 +1,6 @@
 local Mongo   = require "skynet.db.mongo"
 local Bson    = require "bson"
-
+local Log = require "log_api"
 
 -- all funcion begin with ack, will get last error after excute
 local coll_mt = {}
@@ -31,7 +31,7 @@ mt.__index = mt
 
 function mt:get_collection(name)
     if not self.config.collections[name] then
-        print("get collection failed, collection:", name)
+        Log.error("get collection failed, collection:%s", name)
         return
     end
 
@@ -54,7 +54,7 @@ function mt:ensure_indexes(name)
     for _, index in ipairs(config.indexes) do
         local ret = obj:createIndex(index.keys, index.options or {})
         if not ret.ok then
-            print("createIndex, fail:", ret)
+            Log.error("createIndex, fail:%s", ret)
         end
     end
 end

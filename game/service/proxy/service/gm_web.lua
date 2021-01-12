@@ -1,9 +1,10 @@
 local Monitor = require "monitor_api"
+local Log = require "log_api"
 
 local M = {}
 
 function M.hello(now)
-    print("hello: ", now)
+    Log.info("hello:%d", now)
     return true
 end
 

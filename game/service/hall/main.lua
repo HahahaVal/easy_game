@@ -3,7 +3,7 @@ local Monitor   = require "monitor_api"
 local Watcher = require "watcher"
 local Protocol = require "protocol"
 local Env = require "global"
-local SprotoService  = require "lualib.sproto_service"
+local SprotoService  = require "sproto_service"
 local Command = require "command"
 local HallGateApi = require "hall_gate_api"
 local AgentPool = require "lualib.agent_pool"
@@ -12,9 +12,10 @@ local Sessions = require "sessions"
 local Users = require "users"
 local MongoEx = require "mongo_ex"
 local IdAllocator = require "id_allocator"
+local Log = require "log_api"
 
 local function atexit()
-    print("hall exit")
+    Log.info("hall exit")
 end
 
 Skynet.register_protocol(Protocol[Protocol.PTYPE_GATE_NAME])
@@ -56,7 +57,7 @@ local function __init__()
     local id_db = MongoEx.get_game_collection("uniqueid")
     local serverid = assert(Skynet.getenv("serverid"))
     Env.allocator = IdAllocator.new(id_db, "roleid", serverid, 24)
-   
+    
     Monitor.register("hall", atexit)
     Skynet.register ".hall"
 end

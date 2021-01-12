@@ -2,9 +2,10 @@ local Skynet    = require "znet"
 local Monitor   = require "monitor_api"
 local Command = require "command"
 local Env = require "global"
+local Log = require "log_api"
 
 local function atexit()
-    print("agent exit")
+    Log.info("agent exit")
 end
 
 

@@ -1,4 +1,6 @@
 local Skynet = require "znet"
+local Log = require "log_api"
+
 local M = {}
 
 local mt = {}
@@ -45,7 +47,7 @@ function mt:update()
             v.wakeup = v.wakeup + v.interval
             local ok, msg = xpcall(v.func, debug.traceback)
             if not ok then
-                print("timer failed:%s", msg)
+                Log.error("timer failed:%s", msg)
             end
             if v.times > 0 then
                 if v.times == 1 then

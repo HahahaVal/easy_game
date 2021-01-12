@@ -2,6 +2,7 @@ local Skynet       = require "znet"
 local Socket       = require "skynet.socket"
 local SprotoLoader = require "sprotoloader"
 local SprotoDef    = require "sproto_list"
+local Log = require "log_api"
 
 local MAX_PACKET_LEN = 0xffff
 
@@ -73,7 +74,7 @@ end
 local function _send_chunk(address, chunk, name)
     local data = _pack_chunk(chunk)
     if not _write_chunk(address, data) then
-        print("send proto[%s] to address[%s] failed", name, address)
+        Log.error("send proto[%s] to address[%s] failed", name, address)
         return false
     end
     return true
@@ -137,7 +138,7 @@ local function response_to_caller(name, address, response_cb, result)
     end
     local ok, response = xpcall(response_cb, debug.traceback, result)
     if not ok then
-        print("in proto[%s] traceback:%s", name, response)
+        Log.error("in proto[%s] traceback:%s", name, response)
         return
     end
     _send_chunk(address, response, name)

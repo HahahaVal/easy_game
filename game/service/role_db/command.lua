@@ -1,5 +1,6 @@
 local Skynet = require "skynet"
 local Env    = require "global"
+local Log = require "log_api"
 
 local M = {}
 
@@ -40,7 +41,7 @@ end
 function M.add(obj)
     local ok, err = Env.role_db:ack_insert(obj)
     if not ok then
-        print("roleid create role failed: ", obj.roleid, err)
+        Log.error("roleid：%d , create role failed: %s", obj.roleid, err)
         return Skynet.retpack(false)
     end
     return Skynet.retpack(true)
@@ -53,10 +54,10 @@ local function save_data(uid, data)
     local roleid = data.roleid
     local ok, err = Env.role_db:ack_update({roleid=roleid}, data)
     if not ok then
-        print("update roleid failed: ", roleid, err)
+        Log.error("update roleid：%d failed: %s", roleid, err)
         return
     end
-    print("save uid", uid)
+    Log.info("save uid:%d", uid)
 end
 
 function M.update(uid, role)
@@ -65,7 +66,7 @@ function M.update(uid, role)
 
     local cache = get_cache(uid, role.roleid)
     if not cache then
-        print("no role:", uid)
+        Log.error("no role:%d", uid)
         return Skynet.retpack(false)
     end
 

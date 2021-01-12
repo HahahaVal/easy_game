@@ -10,9 +10,10 @@ logger = nil
 logpath = "."
 harbor = 0
 
-
-serverid = 1
+-- node
 start_msg = "/dev/shm/troy/start_msg"
+serverid = 1
 console_port = 10000
 login_port = 10002
 proxy_address = "0.0.0.0:10001"
+log_path = "./log/"

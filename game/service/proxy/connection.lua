@@ -1,10 +1,11 @@
 local Skynet    = require "znet"
+local Log = require "log_api"
 
 local mt = {}
 mt.__index = mt
 
 function mt:on_open(fd, addr)
-    print("new connection fd:",fd," addr:",addr)
+    Log.info("new connection fd:%d, addr:%s", fd, addr)
     self.conns[fd] = {fd = fd, addr = addr}
 
     self.gate:forward(fd, Skynet.self())
@@ -15,9 +16,9 @@ function mt:on_close(fd)
     local conn = self.conns[fd]
     if conn then
         self.conns[fd] = nil
-        print("connection closed fd:",fd," addr:",conn.addr)
+        Log.info("connection closed fd:%d, addr:%s", fd ,conn.addr)
     else
-        print("connection closed fd:",fd)
+        Log.info("connection closed fd:%d",fd)
     end
 end
 

@@ -1,4 +1,5 @@
 local Lock = require "lock"
+local Log = require "log_api"
 
 local Default = 1000
 local CacheCount = 10
@@ -19,10 +20,10 @@ function mt:_fill_cache()
         update = {["$inc"] = {nextid = CacheCount}},
     })
     local start = doc.value.nextid
-    print(string.format("inc uid from %d, count: %d", start, CacheCount))
+    Log.info("inc uid from %d, count: %d", start, CacheCount)
     local max_id = 2^self.bias_size
     if start + WARNING_COUNT > max_id then
-        print(string.format("lack of %s warning, current:%d, max:%d", self.name, start, max_id))
+        Log.error("lack of %s warning, current:%d, max:%d", self.name, start, max_id)
     end
 
     if self.offset then
