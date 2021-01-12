@@ -19,8 +19,7 @@ function mt:_fill_cache()
         update = {["$inc"] = {nextid = CacheCount}},
     })
     local start = doc.value.nextid
-
-    print(string.format("inc uid from %d, count: %d", start, self.count))
+    print(string.format("inc uid from %d, count: %d", start, CacheCount))
     local max_id = 2^self.bias_size
     if start + WARNING_COUNT > max_id then
         print(string.format("lack of %s warning, current:%d, max:%d", self.name, start, max_id))
@@ -28,11 +27,11 @@ function mt:_fill_cache()
 
     if self.offset then
         local bias = self.offset << self.bias_size
-        for i=start, start+self.count-1 do
+        for i=start, start+CacheCount-1 do
             table.insert(self.cache, i+bias)
         end
     else 
-        for i=start, start+self.count-1 do
+        for i=start, start+CacheCount-1 do
             table.insert(self.cache, i)
         end
     end

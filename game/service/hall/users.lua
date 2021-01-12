@@ -38,6 +38,7 @@ function M.new()
         users = {},
     }
     setmetatable(obj,mt)
+    return obj
 end
 
 return M

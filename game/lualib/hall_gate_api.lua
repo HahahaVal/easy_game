@@ -3,20 +3,20 @@ local Skynet = require "znet"
 local mt = {}
 mt.__index = mt
 
-function mt.forward(fd, agent, client)
+function mt:forward(fd, agent, client)
     Skynet.send(self.gate, "text", "forward", fd, Skynet.address(agent), Skynet.address(client))
 end
 
-function mt.start(fd)
+function mt:start(fd)
     Skynet.send(self.gate, "text", "start", fd)
 end
 
-function mt.close()
+function mt:close()
     Skynet.send(self.gate, "text", "close")
 end
 
 
-function mt.kick(fd)
+function mt:kick(fd)
     Skynet.send(self.gate, "text", "kick", fd)
 end
 

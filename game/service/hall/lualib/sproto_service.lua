@@ -86,22 +86,23 @@ function service.send(conn, name, parm)
 end
 
 
-function service.enable(command, filter)
-    for k,v in pairs(command) do
-        if type(v) == "function" then
-            local f = make_callback(v)
-            service.register(k, f, filter)
-        end
-    end
-end
-
-
 function service.register(name, func, filter)
     assert(not cbs[name], name)
     if filter then
         filter_table[name] = filter
     end
     cbs[name] = func
+end
+
+function service.enable(name, filter)
+    local command = require("service."..name)
+    for k,v in pairs(command) do
+        if type(v) == "function" then
+            local interface = name .. "." .. k
+            local f = make_callback(v)
+            service.register(interface, f, filter)
+        end
+    end
 end
 
 

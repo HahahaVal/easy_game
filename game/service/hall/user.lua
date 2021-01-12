@@ -11,6 +11,11 @@ function mt:get_uid()
     return self.uid
 end
 
+function mt:get_agent()
+    return self.agent
+end
+
+
 function mt:get_role()
     if not self.role then
         self.role = RoleApi.get(self.uid, self.roleid)
@@ -55,6 +60,18 @@ function mt:enter_game()
     return true
 end
 
+function mt:leave_game(reason)
+    local agent = self.agent
+    if not agent then
+        return
+    end
+    self.agent = nil
+
+    local fd = self.session:get_fd()
+    local ok, destroyed = pcall(Skynet.call, agent, "lua", "stop", fd, reason)
+
+    Env.agent_pool:put(self.uid)
+end
 
 function mt:on_kicked(reason)
     local fd = self.session:get_fd()
@@ -69,6 +86,7 @@ function M.new(uid, roleid, session)
         roleid = roleid,
         session = session,
         role = nil,
+        agent = nil,
     }
     return setmetatable(obj,mt)
 end

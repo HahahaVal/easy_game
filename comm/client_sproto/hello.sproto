@@ -1,0 +1,10 @@
+# id range [120, 140)
+
+hello 120 {
+    request {
+        client_time 0:integer
+    }
+    response {
+        server_time 0:integer
+    }
+}

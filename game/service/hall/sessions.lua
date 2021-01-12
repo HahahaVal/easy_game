@@ -29,6 +29,7 @@ function M.new()
         sessions = {}, -- fd -> session obj
     }
     setmetatable(obj,mt)
+    return obj
 end
 
 return M

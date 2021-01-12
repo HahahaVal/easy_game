@@ -73,6 +73,12 @@ $(PROTO_DIR)/sproto_list.lua: $(CLIENT_SPROTO)
 	cp $(PROTO_DIR)/sproto_list.lua lualib/
 
 
+##########################levent build
+all: levent
+
+levent: 
+	cd ./tool/levent && cmake . && make
+
 clean:
 	-rm -rf build
 	$(CLEAN_ALL)

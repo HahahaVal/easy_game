@@ -4,7 +4,6 @@ local Watcher = require "watcher"
 local Protocol = require "protocol"
 local Env = require "global"
 local SprotoService  = require "lualib.sproto_service"
-local Login = require "service.login"
 local Command = require "command"
 local HallGateApi = require "hall_gate_api"
 local AgentPool = require "lualib.agent_pool"
@@ -38,7 +37,7 @@ local function __init__()
     end)
 
     --register callback
-    SprotoService.enable(Login)
+    SprotoService.enable("login")
     
     --agent
     local agent_pool_count = assert(tonumber(Skynet.getenv("agent_pool_count")))

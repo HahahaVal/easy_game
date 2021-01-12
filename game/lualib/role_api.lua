@@ -26,3 +26,5 @@ Skynet.init(function()
 	local db_addr = Skynet.queryservice(true, "role_db")
     service = Service.new(db_addr, "lua")
 end, "role_api")
+
+return M
