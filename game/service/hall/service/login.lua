@@ -59,7 +59,6 @@ function M.enter_game(_addr)
     end
 end
 
--- 与登陆初始化相反
 function M.leave_game(_addr)
     Connection.kick(_addr)
 end

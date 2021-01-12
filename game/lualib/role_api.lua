@@ -13,8 +13,8 @@ function M.get(...)
     return data
 end
 
-function M.update(uid, role)
-    return service:call("update", uid, role)
+function M.update(uid, db_obj)
+    return service:call("update", uid, db_obj)
 end
 
 function M.add(obj)

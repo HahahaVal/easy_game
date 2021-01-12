@@ -40,14 +40,16 @@ end
 function mt:enter_game()
     local fd = self.session:get_fd()
     if self.agent then
+        Log.error("enter_game fail: has agent")
         return false
     end
     local agent = Env.agent_pool:get(self.uid)
     if not agent then
+        Log.error("enter_game fail: don't get agent")
         return false
     end
 
-    local ok, inited = pcall(Skynet.call, agent, "lua", "start", fd, self.role.roleid)
+    local ok, inited = pcall(Skynet.call, agent, "lua", "start", fd, self.uid, self.roleid)
     if not ok or not inited then
         Env.agent_pool:put(self.uid)
         return false
@@ -55,6 +57,7 @@ function mt:enter_game()
 
     if not Connection.forward(fd, agent) then
         Env.agent_pool:put(self.uid)
+        Log.error("enter_game fail: messsage forward fail")
         return false
     end
     self.agent = agent

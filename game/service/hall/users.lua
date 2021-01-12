@@ -14,20 +14,18 @@ function mt:create(uid, roleid, session)
     return user
 end
 
-
-function mt:kick(uid, reason)
-    local user = self.users[uid]
-    if user then
-        user:on_kicked(reason)
-    end
-end
-
-
 function mt:destroy(uid, reason)
     local user = self.users[uid]
     if user then
         user:leave_game(reason)
         self.users[uid] = nil
+    end
+end
+
+function mt:kick(uid, reason)
+    local user = self.users[uid]
+    if user then
+        user:on_kicked(reason)
     end
 end
 

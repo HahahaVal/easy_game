@@ -25,7 +25,7 @@ local function get_cache(uid, roleid)
     end
 end
 
-local function update_cache(role)
+local function update_cache(key,role)
     if not role then
         return
     end
@@ -70,7 +70,7 @@ function M.update(uid, role)
         return Skynet.retpack(false)
     end
 
-    update_cache(role)
+    update_cache(uid, role)
     save_data(uid, role)
     return Skynet.retpack(true)
 end

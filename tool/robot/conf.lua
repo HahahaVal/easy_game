@@ -3,5 +3,5 @@ return {
     port = 10002,
     uid = 1,
     roleid = 16778246,
-    script = "tool/robot/test.lua"
+    script = "script.lua"
 }
