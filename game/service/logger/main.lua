@@ -27,7 +27,7 @@ local function __init__()
 	local date = os.date("*t")
 	Env.file = _open_file(date)
 
-    Skynet.register(".logger")
+    Skynet.register("logger")
 end
 
 

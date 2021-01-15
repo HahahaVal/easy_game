@@ -1,7 +1,7 @@
 local Skynet = require "znet"
 
 local function launch_share()
-    Skynet.uniqueservice(true, "logger")
+    Skynet.uniqueservice("logger")
     Skynet.monitor("monitor")
     
     local port = assert(tonumber(Skynet.getenv("console_port")))
@@ -18,7 +18,6 @@ local function init()
     launch_share()
     launch_local()
 end
-
 
 local function __init__()
     local start_result, errmsg = true, nil

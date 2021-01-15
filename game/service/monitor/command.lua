@@ -31,13 +31,22 @@ function M.unregister(address)
 end
 
 function M.start_info(ok, errmsg)
-    local file_path = assert(Skynet.getenv("start_msg"))
+    local file_path = assert(Skynet.getenv("sign_msg"))
     local file = io.open(file_path, "w+")
     assert(file)
     local msg = ok and "_start_ok_" or errmsg
     file:write(os.date(), " ", msg, "\n")
     file:flush()
     return Skynet.retpack(true)
+end
+
+function M.stop_info()
+    local file_path = assert(Skynet.getenv("sign_msg"))
+    local file = io.open(file_path, "w+")
+    assert(file)
+    local msg = "_stop_ok_"
+    file:write(os.date(), " ", msg, "\n")
+    file:flush()
 end
 
 -- 先注册的服务后关闭
@@ -63,7 +72,7 @@ function M.shutdown()
             break
         end
     end
-
+    M.stop_info()
     Skynet.abort()
 end
 

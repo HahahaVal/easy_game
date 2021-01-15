@@ -13,7 +13,7 @@ daemon=$1
 skynet=$SERVER_DIR/bin/skynet
 config=$SERVER_DIR/${server}/etc/game_config
 
-start_info=$(grep "start_msg" $config | awk '{print $3}' | sed "s/\"//g")
+start_info=$(grep "sign_msg" $config | awk '{print $3}' | sed "s/\"//g")
 
 function check_success(){
     wait_sec=5

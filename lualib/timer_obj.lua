@@ -14,7 +14,7 @@ function mt:add_timer(interval, func, times)
     self.timers[handle] = {
         interval = interval, 
         func = func, 
-        wakeup = interval + Skynet.now(),
+        wakeup = interval + Skynet.time(),
         times = times or 0,
     }
     return handle
@@ -27,7 +27,7 @@ function mt:timeout(interval, func)
     self.timers[handle] = {
         interval = interval, 
         func = func, 
-        wakeup = interval + Skynet.now(),
+        wakeup = interval + Skynet.time(),
         times = 1,
     }
     return handle
@@ -43,7 +43,7 @@ function mt:update()
     end
 
     for k,v in pairs(self.timers) do
-        if v.wakeup <= Skynet.now() then
+        if v.wakeup <= Skynet.time() then
             v.wakeup = v.wakeup + v.interval
             local ok, msg = xpcall(v.func, debug.traceback)
             if not ok then

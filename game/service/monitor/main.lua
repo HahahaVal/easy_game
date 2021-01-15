@@ -16,7 +16,7 @@ local function __init__()
         local f = assert(Command[cmd], cmd)
         f(...)
     end)
-    Skynet.register ".monitor"
+    Skynet.register "monitor"
 end
 
 Skynet.start(__init__)

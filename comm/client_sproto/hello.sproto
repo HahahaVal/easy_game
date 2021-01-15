@@ -5,6 +5,6 @@ hello 120 {
         client_time 0:integer
     }
     response {
-        server_time 0:integer
+        server_time 0:string
     }
 }

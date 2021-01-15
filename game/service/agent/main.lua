@@ -51,6 +51,7 @@ local function register_sproto(name)
 end
 
 register_sproto("hello")
+register_sproto("login")
 
 local function __init__()
     Skynet.dispatch("lua", function(_, _, cmd, ...)

@@ -14,12 +14,12 @@ function M.register(catalog, cb)
 end
 
 function M.shutdown()
-    return service:send("shutdown")
+    service:send("shutdown")
 end
 
 Skynet.init(function()
 	local addr = Skynet.queryservice(true, "monitor")
     service = ServiceObj.new(addr, "lua")
-end, "monitor")
+end, "monitor_api")
 
 return M

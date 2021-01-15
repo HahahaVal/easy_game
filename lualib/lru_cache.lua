@@ -8,7 +8,7 @@ mt.__index = function(self, k)
     if v == nil then
         return v
     end
-    self.__expires[k] = Skynet.now() + self.__life
+    self.__expires[k] = Skynet.time() + self.__life
     return v
 end
 
@@ -18,7 +18,7 @@ mt.__newindex = function(self, k, v)
         self.__expires[k] = nil
     else
         self.__data[k] = v
-        self.__expires[k] = Skynet.now() + self.__life
+        self.__expires[k] = Skynet.time() + self.__life
     end
 end
 
@@ -28,7 +28,7 @@ end
 
 local function update(cache)
     assert(getmetatable(cache) == mt)
-    local now = Skynet.now()
+    local now = Skynet.time()
     for k,v in pairs(cache.__expires) do
         if v < now then
             local data = cache.__data[k]

@@ -30,6 +30,7 @@ function mt:init()
         print("enter_game fail")
         return false
     end
+    print("robot enter game success")
     return true
 end
 
@@ -39,12 +40,18 @@ function mt:call(typename, params, expire_sec)
     return ret
 end
 
+function mt:send(typename, params)
+    self.service:send(typename, params)
+end
+
+
 local function test(testfunc)
     local fails = 0
     for _, f in ipairs(testfunc) do
         local ret, error_info = xpcall(f, debug.traceback)
         if not ret then
             fails = fails + 1
+            print("error:",error_info)
         end
     end
     print("test fail :", fails)

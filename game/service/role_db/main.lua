@@ -13,7 +13,7 @@ local function __init__()
 
     Env.role_db = MongoEx.get_game_collection("role")
     Env.roles = LruCache.new(300, 60)
-    Skynet.register ".role_db"
+    Skynet.register "role_db"
 end
 
 Skynet.start(__init__)

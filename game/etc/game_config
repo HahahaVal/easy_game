@@ -11,7 +11,7 @@ logpath = "."
 harbor = 0
 
 -- node
-start_msg = "/dev/shm/troy/start_msg"
+sign_msg = "/dev/shm/troy/sign_msg"
 serverid = 1
 console_port = 10000
 login_port = 10002

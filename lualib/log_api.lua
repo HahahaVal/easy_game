@@ -38,7 +38,7 @@ local function send_log(level, ...)
     else
         str = _format(...)
     end
-
+    --根据函数信息表得到调用栈
     local info = debug.getinfo(3)
 	if info then
 		str = string.format("[%s:%d] %s", info.short_src, info.currentline, str)
@@ -61,7 +61,7 @@ end
 
 
 Skynet.init(function()
-	local addr = Skynet.queryservice(true, "logger")
+	local addr = Skynet.queryservice("logger")
     service = ServiceObj.new(addr, "lua")
 end, "logger")
 
