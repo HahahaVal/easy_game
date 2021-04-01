@@ -1,9 +1,9 @@
 [submodule "comm/sprotodump"]
 	path = comm/sprotodump
-	url = https://github.com/HahahaVal/sprotodump.git
+	url = git@github.com:HahahaVal/sprotodump.git
 [submodule "skynet"]
 	path = skynet
-	url = https://github.com/HahahaVal/skynet.git
+	url = git@github.com:HahahaVal/skynet.git 
 [submodule "tool/levent"]
 	path = tool/levent
 	url = git@github.com:HahahaVal/levent.git
