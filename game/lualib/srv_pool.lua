@@ -1,5 +1,7 @@
 local Skynet = require "znet"
 local Node = require "srv_node"
+local Queue = require "skynet.queue"
+
 local mt = {}
 mt.__index = mt
 
@@ -46,22 +48,26 @@ function mt:reset_nodes()
 end
 
 function mt:check_retire_nodes()
-    for i in ipairs(self.nodes) do
-        local node = self.nodes[i]
-        if node:get_work_times() >= self.threshold then
-            self:_retire_node(i)
+    self.lock(function ()
+        for i in ipairs(self.nodes) do
+            local node = self.nodes[i]
+            if node:get_work_times() >= self.threshold then
+                self:_retire_node(i)
+            end
         end
-    end
+    end)
 end
 
 function mt:del_nodes()
-    for i=#self.retired_nodes, 1, -1 do
-        local node = self.retired_nodes[i]
-        if node:get_count() == 0 then
-            node:fini()
-            table.remove(self.retired_nodes, i)
+    self.lock(function ()
+        for i=#self.retired_nodes, 1, -1 do
+            local node = self.retired_nodes[i]
+            if node:get_count() == 0 then
+                node:fini()
+                table.remove(self.retired_nodes, i)
+            end
         end
-    end
+    end)
 end
 
 function mt:update()
@@ -80,6 +86,7 @@ function M.new(node_creator, node_deleter, count, threshold)
         key_node = {},
         threshold = threshold,
         count = count,
+        lock = Queue(),
     }
     return setmetatable(obj, mt)
 end
