@@ -6,7 +6,7 @@ local Env = require "global"
 local SprotoService  = require "sproto_service"
 local Command = require "command"
 local HallGateApi = require "hall_gate_api"
-local AgentPool = require "lualib.agent_pool"
+local SrvPool = require "srv_pool"
 local TimerObj  = require "timer_obj"
 local Sessions = require "sessions"
 local Users = require "users"
@@ -41,12 +41,17 @@ local function __init__()
     SprotoService.enable("login")
     
     --agent
+    local agent_pool_createor = function()
+        return Skynet.newservice("agent")
+    end
+    local agent_pool_deleter = function(addr)
+        Skynet.kill(addr)
+    end
     local agent_pool_count = assert(tonumber(Skynet.getenv("agent_pool_count")))
     local agent_pool_threshold = assert(tonumber(Skynet.getenv("agent_pool_threshold")))
-    Env.agent_pool = AgentPool.new(agent_pool_count, agent_pool_threshold)
-    Skynet.fork(function()
-        Env.agent_pool:reset_nodes()
-    end)
+    Env.agent_pool = SrvPool.new(agent_pool_createor, agent_pool_deleter, agent_pool_count, agent_pool_threshold)
+    Env.agent_pool:reset_nodes()
+    
     Env.timers = TimerObj.new(10)
     Env.timers:add_timer(10, function()
         Env.agent_pool:update()
