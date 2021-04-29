@@ -14,7 +14,12 @@ LUA_BIN="./skynet/3rd/lua/lua"
 export LUA_CPATH=$(TOP)/$(BUILD_CLUALIB_DIR)/?.so
 export LUA_PATH=$(TOP)/lualib/?.lua;$(TOP)/skynet/lualib/?.lua
 
-all: build
+all: build submodule
+
+
+submodule:
+	 git submodule update --init
+
 
 build:
 	-mkdir -p $(BUILD_DIR)
