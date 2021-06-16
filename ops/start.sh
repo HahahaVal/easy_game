@@ -15,6 +15,8 @@ config=$SERVER_DIR/${server}/etc/game_config
 
 start_info=$(grep "sign_msg" $config | awk '{print $3}' | sed "s/\"//g")
 
+export JE_MALLOC_CONF="background_thread:true, retain:false"
+
 function check_success(){
     wait_sec=5
     while [ $wait_sec -ge 0 ]; do
