@@ -12,3 +12,6 @@
 
 修改配置文件config，指定要登陆的玩家和要执行的脚本script，在script中编写要执行的指令  
     lua main  
+
+# 行为树转换
+python BTConvertor.py

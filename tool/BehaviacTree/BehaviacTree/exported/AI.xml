@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--EXPORTED BY TOOL, DON'T MODIFY IT!-->
+<!--Source File: AI.xml-->
+<behavior name="AI" agenttype="AI" version="5">
+  <node class="Sequence" id="0">
+    <node class="Action" id="1">
+      <property Method="Self.AI::BT_SelectSkill()" />
+      <property ResultOption="BT_INVALID" />
+    </node>
+    <node class="Action" id="2">
+      <property Method="Self.AI::BT_SelectTarget()" />
+      <property ResultOption="BT_INVALID" />
+    </node>
+    <node class="Action" id="3">
+      <property Method="Self.AI::BT_DoAction()" />
+      <property ResultOption="BT_INVALID" />
+    </node>
+  </node>
+</behavior>
