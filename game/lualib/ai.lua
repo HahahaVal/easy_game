@@ -221,7 +221,7 @@ local function IfElse(ai_obj, entity, node_config)
 end
 
 local function DecoratorLoop(ai_obj, entity, node_config)
-	--Count为1/0的时候都表示无限循环
+	--Count小于1表示无限循环
 	local count = node_config.Count
 	local inOneFrame = node_config.DoneWithinFrame
 	local loopNode = node_config.nodeList[1]
