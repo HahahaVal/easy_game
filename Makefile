@@ -1,8 +1,8 @@
 .PHONY: all clean
 
 TOP=.
-BUILD_DIR=./build
 BIN_DIR=./bin
+BUILD_DIR=./build
 BUILD_CLUALIB_DIR=$(BUILD_DIR)/clualib
 BUILD_CSERVICE_DIR=$(BUILD_DIR)/cservice
 INCLUDE_DIR=$(BUILD_DIR)/include
@@ -38,11 +38,11 @@ SKYNET_MAKEFILE=skynet/Makefile
 $(SKYNET_MAKEFILE):
 	git submodule update --init
 
-SKYNET_DEP_PATH= SKYNET_BUILD_PATH=../$(BIN_DIR) \
+SKYNET_DEP_PATH=SKYNET_BUILD_PATH=../$(BIN_DIR) \
 		LUA_CLIB_PATH=../$(BUILD_CLUALIB_DIR) \
 		CSERVICE_PATH=../$(BUILD_CSERVICE_DIR)
 
-build-skynet: | $(SKYNET_MAKEFILE)
+build-skynet: $(SKYNET_MAKEFILE)
 	cd skynet && $(MAKE) PLAT=linux $(SKYNET_DEP_PATH)
 
 skynet: build-skynet
