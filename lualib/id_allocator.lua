@@ -5,20 +5,20 @@ local Default = 1000
 local CacheCount = 10
 local WARNING_COUNT = 10000
 
-
 local mt = {}
 mt.__index = mt
 
-
+--填充cache
 function mt:_fill_cache()
     if #self.cache > 0 then
         return
     end
-
+    --默认情况下返回的文档不包括对更新所做的修改
     local doc = self.db:findAndModify({
         query = {name = self.name},
         update = {["$inc"] = {nextid = CacheCount}},
     })
+
     local start = doc.value.nextid
     Log.info("inc uid from %d, count: %d", start, CacheCount)
     local max_id = 2^self.bias_size
@@ -31,13 +31,14 @@ function mt:_fill_cache()
         for i=start, start+CacheCount-1 do
             table.insert(self.cache, i+bias)
         end
-    else 
+    else
         for i=start, start+CacheCount-1 do
             table.insert(self.cache, i)
         end
     end
 end
 
+--检查命中cache
 function mt:_check_cache()
     if #self.cache > 0 then
         return
@@ -45,16 +46,15 @@ function mt:_check_cache()
     self.lock:lock_func(self._fill_cache, self)
 end
 
--- 分配一个id，若缓存为空，会修改数据库
+-- 分配id
 function mt:acquire()
     self:_check_cache()
     return table.remove(self.cache, 1)
 end
 
-
 function mt:init()
-    local o = self.db:findOne({name=self.name})
-    if not o then
+    local doc = self.db:findOne({name=self.name})
+    if not doc then
         self.db:insert({name=self.name, nextid=Default})
     end
 end

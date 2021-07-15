@@ -1,6 +1,6 @@
 local Mongo   = require "skynet.db.mongo"
-local Bson    = require "bson"
-local Log = require "log_api"
+local Log     = require "log_api"
+local Skynet  = require "znet"
 
 -- all funcion begin with ack, will get last error after excute
 local coll_mt = {}

@@ -6,8 +6,8 @@ local service
 
 local LOG_LEVEL = {
     DEBUG   = 1,
-    INFO    = 2, 
-    ERROR   = 3, 
+    INFO    = 2,
+    ERROR   = 3,
 }
 
 local OUT_PUT_LEVEL = LOG_LEVEL.DEBUG
@@ -43,7 +43,7 @@ local function send_log(level, ...)
 	if info then
 		str = string.format("[%s:%d] %s", info.short_src, info.currentline, str)
     end
-    
+
     service:send("logging", LOG_LEVEL_DESC[level], str)
 end
 
