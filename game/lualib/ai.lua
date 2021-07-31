@@ -1,9 +1,8 @@
-local Skynet = require "znet"
 local Log = require "log_api"
 local Coroutine = require "skynet.coroutine"
-local coroutine_resume = coroutine.resume
-local coroutine_yield = coroutine.yield
-local coroutine_create = coroutine.create
+local coroutine_resume = Coroutine.resume
+local coroutine_yield = Coroutine.yield
+local coroutine_create = Coroutine.create
 
 local BT_INVALID = "BT_INVALID"
 local BT_SUCCESS = "BT_SUCCESS"
@@ -59,23 +58,25 @@ end
 local function bt_yield(...)
 	local signal = coroutine_yield(BT_RUNNING, ...)
 	if signal == "EXIT" then
-		error(DEX_BT_STOP, 0)
+		error(DEX_BT_STOP)
 	end
 end
 
 --前置节点处理
-local function iter_precondition(ai_obj, entity, precondition_list)
+local function iter_precondition(ai_obj, entity, c_preconditions)
 	local binary_op = true
-	for i, precondition in ipairs(precondition_list) do
-		local ret = false
-		local oper_func = OPER_TYPE[precondition.Operator]
-		local op1_ret = op_ret_handler(ai_obj, entity, precondition.Opl)
-		local op2_ret = op_ret_handler(ai_obj, entity, precondition.Op2)
+	local ret
+	for i, c_precondition in ipairs(c_preconditions) do
+		local oper_func = OPER_TYPE[c_precondition.Operator]
+		local op1_ret = op_ret_handler(ai_obj, entity, c_precondition.Opl)
+		local op2_ret = op_ret_handler(ai_obj, entity, c_precondition.Opr2)
 		if oper_func(op1_ret, op2_ret) == BT_SUCCESS then
 			ret = true
+		else
+			ret = false
 		end
 		--第一个节点的BinaryOperator必然是And
-		if precondition.BinaryOperator == "And" then
+		if c_precondition.BinaryOperator == "And" then
 			binary_op = ret and binary_op
 		else
 			binary_op = ret or binary_op
@@ -102,27 +103,29 @@ local function iter_node(ai_obj, entity, node_config)
 end
 
 --效果处理节点。
-local function iter_effector(ai_obj, entity, effector_list, bt_status)
+local function iter_effector(ai_obj, entity, c_effectors, bt_status)
 	local ret = (bt_status == "BT_SUCCESS")
-	for i, effector_config in ipairs(effector_list) do
-		local phase = effector_config.Phase
+	for i, c_effector in ipairs(c_effectors) do
+		local phase = c_effector.Phase
 		if ( phase == "Success" and ret) or (phase == "Failure" and not ret) or (phase == "Both") then
-			op_ret_handler(ai_obj, entity, effector_config.Opl)
+			op_ret_handler(ai_obj, entity, c_effector.Opl)
 		end
 	end
 end
 
 local function iter_bt_node(ai_obj, entity, node_config)
-	if node_config.preconditionList then
-		if not iter_precondition(ai_obj, entity, node_config.preconditionList) then
+	local c_preconditions = node_config.preconditionList
+	if c_preconditions then
+		if not iter_precondition(ai_obj, entity, c_preconditions) then
 			return BT_FAILURE
 		end
 	end
 
 	local bt_status = iter_node(ai_obj, entity, node_config)
 
-	if node_config.effectorList then
-		iter_effector(ai_obj, entity, node_config.effectorList, bt_status)
+	local c_effectors = node_config.effectorList
+	if c_effectors then
+		iter_effector(ai_obj, entity, c_effectors, bt_status)
 	end
 
 	return bt_status
@@ -146,7 +149,7 @@ end
 
 local function Selector(ai_obj, entity, node_config)
 	local bt_status
-	for i,child_node_config in ipairs(node_config.nodeList) do
+	for i, child_node_config in ipairs(node_config.nodeList) do
 		repeat
 			bt_status = iter_node(ai_obj, entity, child_node_config)
 			if bt_status == BT_SUCCESS then
@@ -180,6 +183,7 @@ end
 
 local function Parallel(ai_obj, entity, node_config)
 	Log.error("Parallel is not support")
+	return BT_SUCCESS
 end
 
 local function False()
@@ -223,14 +227,14 @@ end
 local function DecoratorLoop(ai_obj, entity, node_config)
 	--Count小于1表示无限循环
 	local count = node_config.Count
+	local maxCountPreframe = 100
 	local inOneFrame = node_config.DoneWithinFrame
 	local loopNode = node_config.nodeList[1]
-	local maxCountPreframe = 100
 	local bt_status
-	repeat 
+	repeat
 		maxCountPreframe = maxCountPreframe - 1
 		if maxCountPreframe <= 0 then
-			bt_yield()
+			bt_yield()--限制最大只会执行100次每次
 			maxCountPreframe = 100
 		end
 		--循环只会有一个子节点。
@@ -246,8 +250,8 @@ local function DecoratorLoop(ai_obj, entity, node_config)
 	return BT_SUCCESS
 end
 
-local function End( ai_obj, entity, node_config )
-	error(DEX_BT_STOP,0)
+local function End(ai_obj, entity, node_config)
+	error(DEX_BT_STOP)
 end
 
 NODE_TYPE = {
@@ -275,6 +279,7 @@ local function run_ai(ai_obj, entity, bt_config)
 end
 
 local corCache = setmetatable({},{__mode="k"})
+
 local function create_cor()
 	local co = next(corCache)
 	if co then
@@ -292,6 +297,7 @@ local function create_cor()
 	return co
 end
 
+--每帧反复调用
 function mt:run_ai()
 	local cor = self.cor
 	if not cor then
@@ -306,10 +312,17 @@ function mt:run_ai()
 
 	self.cor = false
 	if not CHECK_RET[ret] then
-		Log.error("run_ai return a wrong return type, ret:",ret)
+		Log.error("run_ai return a wrong ret type, ret:",ret)
 	end
 end
 
+--停止行为树
+function mt:stop_ai()
+	if self.cor then
+		coroutine_resume(self.cor, "EXIT")
+		self.cor = nil
+	end
+end
 
 local M = {}
 function M.new(entity, bt_config)
@@ -318,7 +331,7 @@ function M.new(entity, bt_config)
 		bt_config = bt_config,
 		cor = false, --用于记录上一帧ai操作的协程
 	}
-    setmetatable(obj,mt)
+    setmetatable(obj, mt)
     return obj
 end
 return M
