@@ -274,7 +274,7 @@ NODE_TYPE = {
 local mt = {}
 mt.__index = mt
 
-local function run_ai(ai_obj, entity, bt_config)
+local function _run_ai(ai_obj, entity, bt_config)
 	return iter_bt_node(ai_obj, entity, bt_config[1])
 end
 
@@ -287,11 +287,11 @@ local function create_cor()
 		return co
 	end
 	co = coroutine_create(function(ai_obj, entity, bt_config)
-		xpcall(run_ai, debug.traceback(), ai_obj, entity, bt_config)
+		xpcall(_run_ai, debug.traceback, ai_obj, entity, bt_config)
 		while true do
 			corCache[co] = true
 			ai_obj, entity, bt_config = coroutine_yield()
-			xpcall(run_ai, debug.traceback(), ai_obj, entity, bt_config)
+			xpcall(_run_ai, debug.traceback, ai_obj, entity, bt_config)
 		end
 	end)
 	return co
