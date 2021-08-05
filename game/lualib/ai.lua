@@ -305,14 +305,17 @@ function mt:run_ai()
 	end
 	local _, ret = coroutine_resume(cor, self, self.entity, self.bt_config)
 
-	if ret == BT_RUNNING then
-		self.cor = cor
-		return
-	end
-
-	self.cor = false
-	if not CHECK_RET[ret] then
-		Log.error("run_ai return a wrong ret type, ret:",ret)
+	if ret then
+		if ret == BT_RUNNING then
+			self.cor = cor
+		else
+			self.cor = false
+		end
+		if not CHECK_RET[ret] then
+			Log.error("run_ai return a wrong ret type, ret:",ret)
+		end
+	else
+		self.cor = false
 	end
 end
 
