@@ -221,4 +221,3 @@ if __name__ == '__main__':
 			filename, ext = os.path.splitext(file_full_name)
 			if ext == XML_EXT:
 				convert_xml_to_lua(os.path.join(root, file_full_name), filename)
-		break
