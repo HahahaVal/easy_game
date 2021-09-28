@@ -62,6 +62,25 @@ local function bt_yield(...)
 	end
 end
 
+local _cor_cache = setmetatable({},{__mode="k"})
+
+local function create_cor(func)
+	local co = next(_cor_cache)
+	if co then
+		_cor_cache[co] = nil
+		return co
+	end
+	co = coroutine_create(function(ai_obj, entity, bt_config)
+		xpcall(func, debug.traceback, ai_obj, entity, bt_config)
+		while true do
+			_cor_cache[co] = true
+			ai_obj, entity, bt_config = coroutine_yield()
+			xpcall(func, debug.traceback, ai_obj, entity, bt_config)
+		end
+	end)
+	return co
+end
+
 --前置节点处理
 local function iter_precondition(ai_obj, entity, c_preconditions)
 	local binary_op = true
@@ -181,9 +200,59 @@ local function Action(ai_obj, entity, node_config)
 	return resultOption
 end
 
+local function parallel_child_node(ai_obj, entity, node_config)
+	local bt_status
+	repeat
+		bt_status = iter_node(ai_obj, entity, node_config)
+		if bt_status == BT_RUNNING then
+			bt_yield()
+		end
+	until bt_status ~= BT_RUNNING
+	return bt_status
+end
+
 local function Parallel(ai_obj, entity, node_config)
-	Log.error("Parallel is not support")
-	return BT_SUCCESS
+	local sawSuccess = false
+	local sawFail = false
+	local sawRunning = false
+	local sawAllFails = false
+	local sawAllSuccess = false
+
+	local bt_status
+	for i, childNodeConfig in ipairs(node_config.nodeList) do
+		local cor = ai_obj:get_node_cor(i)
+		if not cor then
+			cor = create_cor(parallel_child_node)
+		end
+		local corState, ret = coroutine_resume(cor, ai_obj, entity, childNodeConfig)
+
+		if ret == BT_FAILURE then
+			sawFail = true
+            sawAllSuccess = false
+			ai_obj:reset_node_cor(i)
+		elseif ret == BT_SUCCESS then
+			sawSuccess = true
+			sawAllFails = false
+			ai_obj:reset_node_cor(i)
+		elseif ret == BT_RUNNING then
+			sawRunning = true;
+            sawAllFails = false;
+            sawAllSuccess = false;
+			ai_obj:set_node_cor(i, cor)
+		end
+	end
+
+	bt_status = sawRunning and BT_RUNNING or BT_FAILURE
+
+	local failurePolicy = node_config.FailurePolicy
+	local successPolicy = node_config.SuccessPolicy
+	if ( failurePolicy == "FAIL_ON_ALL" and sawAllFails) or (failurePolicy == "FAIL_ON_ONE" and sawFail) then
+		bt_status = BT_FAILURE
+	elseif (successPolicy == "SUCCEED_ON_ALL" and sawAllSuccess) or (successPolicy == "SUCCEED_ON_ONE" and sawSuccess) then
+		bt_status = BT_SUCCESS
+	end
+
+	return bt_status
 end
 
 local function False()
@@ -278,30 +347,23 @@ local function _run_ai(ai_obj, entity, bt_config)
 	return iter_bt_node(ai_obj, entity, bt_config[1])
 end
 
-local corCache = setmetatable({},{__mode="k"})
+function mt:set_node_cor(node_index, core)
+	self.node_cor[node_index] = core
+end
 
-local function create_cor()
-	local co = next(corCache)
-	if co then
-		corCache[co] = nil
-		return co
-	end
-	co = coroutine_create(function(ai_obj, entity, bt_config)
-		xpcall(_run_ai, debug.traceback, ai_obj, entity, bt_config)
-		while true do
-			corCache[co] = true
-			ai_obj, entity, bt_config = coroutine_yield()
-			xpcall(_run_ai, debug.traceback, ai_obj, entity, bt_config)
-		end
-	end)
-	return co
+function mt:reset_node_cor(node_index)
+	self.node_cor[node_index] = false
+end
+
+function mt:get_node_cor(node_index)
+	return self.node_cor[node_index]
 end
 
 --每帧反复调用
 function mt:run_ai()
 	local cor = self.cor
 	if not cor then
-		cor = create_cor()
+		cor = create_cor(_run_ai)
 	end
 	local _, ret = coroutine_resume(cor, self, self.entity, self.bt_config)
 
@@ -333,6 +395,7 @@ function M.new(entity, bt_config)
 		entity = entity,
 		bt_config = bt_config,
 		cor = false, --用于记录上一帧ai操作的协程
+		node_cor = {},	--记录并行挂起的节点协程
 	}
     setmetatable(obj, mt)
     return obj
