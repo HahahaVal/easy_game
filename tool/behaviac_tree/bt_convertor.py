@@ -82,7 +82,17 @@ def convert_op_param(op_str):
 				value = "\""+match_obj.group(1)+"\""
 			else:
 				value = "\""+op_str+"\""
-	return "{{ type = {0}, value = {1} }}".format(s_type, value)
+
+	paramStr = convert_params(op_str)
+    paramLuaTable = "{"
+    if paramStr:
+        params = paramStr.split(',')
+        for param in params:
+            if param.isdigit():
+                paramLuaTable = paramLuaTable + param + ","
+    paramLuaTable = paramLuaTable + "}"
+
+    return "{{ type = {0}, value = {1}, params = {2} }}".format(s_type, value, paramLuaTable)
 
 
 def convert_method(op_str):

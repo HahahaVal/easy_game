@@ -265,8 +265,8 @@ end
 
 local function Or(ai_obj, entity, node_config)
 	local nodeList = node_config.nodeList
-	local ret1 = iter_node(nodeList[1])
-	local ret2 = iter_node(nodeList[2])
+	local ret1 = iter_node(ai_obj, entity, nodeList[1])
+	local ret2 = iter_node(ai_obj, entity, nodeList[2])
 	if ret1 or ret2 then
 		return BT_SUCCESS
 	end
@@ -275,8 +275,8 @@ end
 
 local function And(ai_obj, entity, node_config)
 	local node_list = node_config.nodeList
-	local ret1 = iter_node(node_list[1])
-	local ret2 = iter_node(node_list[2])
+	local ret1 = iter_node(ai_obj, entity, node_list[1])
+	local ret2 = iter_node(ai_obj, entity, node_list[2])
 	if ret1 and ret2 then
 		return BT_SUCCESS
 	end
@@ -285,11 +285,11 @@ end
 
 local function IfElse(ai_obj, entity, node_config)
 	local node_list = node_config.nodeList
-	local b_ret = iter_node(node_list[1])
+	local b_ret = iter_node(ai_obj, entity, node_list[1])
 	if b_ret then
-		return iter_node(node_list[2])
+		return iter_node(ai_obj, entity, node_list[2])
 	else
-		return iter_node(node_list[3])
+		return iter_node(ai_obj, entity, node_list[3])
 	end
 end
 
