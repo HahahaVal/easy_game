@@ -1,5 +1,5 @@
-local Skynet    = require "znet"
-local Monitor   = require "monitor_api"
+local Skynet = require "znet"
+local Monitor = require "monitor_api"
 local Command = require "command"
 local Env = require "global"
 local SprotoService  = require "sproto_service"

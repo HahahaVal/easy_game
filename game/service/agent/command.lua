@@ -1,7 +1,7 @@
 local Skynet = require "skynet"
-local Env    = require "global"
-local Role   = require "role"
-local Log    = require "log_api"
+local Env = require "global"
+local Role = require "role"
+local Log = require "log_api"
 
 local M = {}
 
