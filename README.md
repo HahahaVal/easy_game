@@ -9,7 +9,7 @@
 * agent服务：多个role公用一个agent，根据fd找到指定role处理sproto协议  
 
 # 环境构建
-sudo python3 env_build.py 
+sudo python env_build.py 
 
 # 编译
 make clean  
