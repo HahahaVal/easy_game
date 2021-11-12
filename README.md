@@ -8,6 +8,9 @@
 * hall服务：分配和释放agent池,管理所有user，根据fd处理sproto协议  
 * agent服务：多个role公用一个agent，根据fd找到指定role处理sproto协议  
 
+# 环境构建
+sudo python3 env_build.py 
+
 # 编译
 make clean  
 make
