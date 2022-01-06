@@ -2,6 +2,7 @@ local Mongo   = require "skynet.db.mongo"
 local Log     = require "log_api"
 local Skynet  = require "znet"
 
+
 -- all funcion begin with ack, will get last error after excute
 local coll_mt = {}
 local prefix = 'ack_'
@@ -36,7 +37,11 @@ function mt:get_collection(name)
     end
 
     if not self.collections[name] then
-        self.collections[name] = setmetatable({db=self.db, coll=self.db[name]}, coll_mt)
+        local collectObj = {
+            db = self.db,
+            coll = self.db[name],
+        }
+        self.collections[name] = setmetatable(collectObj, coll_mt)
         self:ensure_indexes(name)
     end
     return self.collections[name]
@@ -59,6 +64,18 @@ function mt:ensure_indexes(name)
     end
 end
 
+function mt:drop_index(name, index)
+    if not name or not index then
+        return
+    end
+
+    local coll = self.db[name]
+    coll:dropIndex(index)
+end
+
+function mt:drop_indexes(name)
+    self:drop_index(name, "*")
+end
 
 local function load_config(path)
     local env = {}
@@ -71,14 +88,20 @@ local M = {}
 function M.new(name)
     local path = assert(Skynet.getenv("mongodb"))
     local config = load_config(path)
-    local client = Mongo.client(config.addr)
+    local addr = config.addr
+    local ok, client = xpcall(Mongo.client, debug.traceback, addr)
+    if not ok then
+        Log.Errorf('can not connect to [%s:%d]', addr.host, addr.port)
+        Log.Errorf('无法连接到%s:%d, 请检查%s', addr.host, addr.port, path)
+    end
+
     local db = client:getDB(name)
 
-    local obj = {}
-    obj.db = db
-    obj.collections = {}
-    obj.config = config
-
+    local obj = {
+        db = db,
+        collections = {},
+        config = config,
+    }
     return setmetatable(obj, mt)
 end
 return M
