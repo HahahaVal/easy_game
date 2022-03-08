@@ -1,99 +1,133 @@
-local skynet = require "skynet"
-local httpc = require "http.httpc"
+local Httpc = require "http.httpc"
 local Json = require "cjson"
+local Log = require "log_api"
 
 local M = {}
 
 local mt = {}
 mt.__index = mt
 
-httpc.dns() -- 异步查询 dns，避免阻塞整个 skynet 的网络消息
-
-local function escape(s)
-	return (string.gsub(s, "([^A-Za-z0-9_])", function(c)
-		return string.format("%%%02X", string.byte(c))
-	end))
-end
+Httpc.dns() -- 异步查询 dns，避免阻塞整个 skynet 的网络消息
 
 local function format_params(params)
     local paramsT = {}
 	for k, v in pairs(params) do
 		local key = tostring(k)
 		local value = tostring(v)
-		if key and key ~= "" and value and value ~= "" then
-			table.insert(paramsT, escape(key) .. "=" .. escape(value))
-		end
+        table.insert(paramsT, key .. "=" .. value)
 	end
 	return table.concat(paramsT, "&")
 end
 
-function mt:request(method, action, params)
+function mt:request(method, action, opts)
+    opts = opts or {}
+
+    local reqHost = self.addr
+
+    if opts.query then
+        action = action .. '?' .. format_params(opts.query)
+    end
+
+    local reqData
+    if opts.body then
+        reqData = format_params(opts.body)
+    end
+
 	local header = {
 		["content-type"] = "application/x-www-form-urlencoded"
 	}
-    local reqHost = self.addr
 	local recvheader = {}
 
-    local reqData = format_params(params)
-
-    local success, status, rspData = pcall(httpc.request, method, reqHost, action, recvheader, header, reqData)
+    local success, status, rspData = pcall(Httpc.request, method, reqHost, action, recvheader, header, reqData)
     if not success then
-		skynet.logerror("mt.request",string.format("error:%s  host:%s  params:%s", status, reqHost .. action, reqData))
+		Log.error("request",string.format("error:%s  host:%s  params:%s", status, reqHost .. action, reqData))
     end
 	return status, rspData, recvheader
 end
 
-function mt:get(key, opts)
-    if not key then
-        skynet.logerror("get key invalid")
+function mt:set(key, value, attr)
+    if not key or not value then
+        Log.error("set key invalid")
         return false
     end
 
-    local action = self.root .. "/" .. key
-    local limit = (opts and opts.limit) or 0
-    local opt = {
-        limit = limit,
+    attr = attr or {}
+    local dir = attr.dir and 'true' or 'false'
+    local prev_exist = attr.prev_exist and 'true' or 'false'
+
+    local opts = {
+        body = {
+            value = value,
+            ttl = attr.ttl,
+            dir = dir,
+            prevValue = attr.prev_value,
+            prevIndex = attr.prev_index,
+            prevExist = prev_exist,
+        },
     }
-    local status, rspData = self:request("GET", action, opt)
+    local action = self.full_prefix .. "/" .. key
+    local status, rspData = self:request(attr.in_order and 'POST' or 'PUT', action, opts)
+    if status ~= 200 then
+        Log.error("ectd error Set key:",status, rspData, key, value)
+        return false
+    end
+    return true
+end
+
+function mt:get(key, attr)
+    if not key then
+        Log.error("get key invalid")
+        return false
+    end
+
+    attr = attr or {}
+    local attr_wait = attr.wait and 'true' or 'false'
+    local attr_recursive = attr.recursive and 'true' or 'false'
+
+    local opts = {
+        query = {
+            wait = attr_wait,
+            waitIndex = attr.wait_index,
+            recursive = attr_recursive,
+        }
+    }
+
+    local action = self.full_prefix .. "/" .. key
+    local status, rspData = self:request("GET", action, opts)
     if status == 200 then
         local data = Json.decode(rspData)
         return data.node.value
     else
-        skynet.logerror("ectd error get key:",status, rspData, key)
+        Log.error("ectd error get key:", status, rspData, key)
         return false
     end
 end
 
-function mt:set(key, value, opts)
-    if not key or not value then
-        skynet.logerror("set key invalid")
+function mt:delete(key)
+    if not key then
+        Log.error("Delete key invalid")
         return false
     end
-
-    local action = self.root .. "/" .. key
-
-    local ttl = (opts and opts.ttl) or 10
-    local opt = {
-        value = value,
-        ttl = ttl,
-    }
-    local status, rspData = self:request("PUT", action, opt)
+    local action = self.full_prefix .. "/" .. key
+    local status, rspData = self:Request("DELETE", action)
     if status ~= 200 then
-        skynet.logerror("ectd error set key:",status, rspData, key, value)
+        Log.error("ectd error Delete key:",status, rspData, key)
+        return false
     end
+    return true
 end
 
-function M.new(hosts, root)
+function M.new(hosts, full_prefix)
     if type(hosts) ~= "table" then
-        skynet.logerror("hosts must be table")
+        Log.error("hosts must be table")
         return false
     end
     local obj = {
         hosts = hosts,
         addr = hosts[1] or "127.0.0.1:2379",
-        root = root or "/v2/keys",
+        full_prefix = full_prefix or "/v2/keys",
     }
     return setmetatable(obj, mt)
 end
 
-return M--[[Hotfix]]
+return M
