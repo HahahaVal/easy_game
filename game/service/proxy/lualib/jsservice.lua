@@ -1,5 +1,5 @@
 local Skynet = require "znet"
-local Json   = require "lualib.json"
+local Json   = require "json"
 local Driver = require "skynet.socketdriver"
 
 local MAX_RESP_LEN = 0x10000000
