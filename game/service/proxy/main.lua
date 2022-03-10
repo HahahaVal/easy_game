@@ -31,6 +31,16 @@ local function __init__()
 
     Monitor.register("proxy", atexit)
     Skynet.register ".proxy"
+
+    local hosts = {
+        "127.0.0.1:2379"
+    }
+    local etcd = require "etcd_api"
+
+    local obj = etcd.new(hosts)
+    obj:mkdir("dir9")
+    obj:push("dir9/aaa","xx")
+    print("~~~~~~~~~~~~~~",obj:read_dir("dir9",true))
 end
 
 Skynet.start(__init__)

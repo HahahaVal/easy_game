@@ -62,11 +62,16 @@ function mt:_request(method, action, opts, timeout)
 	local recvheader = {}
 
     local success, status, rspData = pcall(Httpc.request, method, reqHost, action, recvheader, header, reqData)
+    Log.debug("request method:%s host:%s action:%s reqData:%s rspData:%s", method, reqHost, action, reqData, rspData)
     if not success then
-		Log.error("_request status:%s rspData:%s host:%s reqData:%s", status, rspData, reqHost .. action, reqData)
+        Log.error("request error status:%s", status)
+        return false
     end
-    Log.debug("_request method:%s host:%s action:%s reqData:%s", method, reqHost, action, reqData)
-	return status, rspData, recvheader
+    if status < 200 or status >= 300 then
+        Log.error("invalid response status:%s", status)
+        return false
+    end
+    return Json.decode(rspData)
 end
 
 function mt:_set(key, value, attr)
@@ -100,9 +105,9 @@ function mt:_set(key, value, attr)
         },
     }
     local action = self.full_prefix .. "/" .. key
-    local status, rspData = self:_request(attr.in_order and 'POST' or 'PUT', action, opts, self.timeout)
-    if status ~= 200 then
-        Log.error("ectd error set key status:%s, rspData:%s, key:%s, value:%s",status, rspData, key, value)
+    local rspData = self:_request(attr.in_order and 'POST' or 'PUT', action, opts, self.timeout)
+    if not rspData then
+        Log.error("ectd error set key rspData:%s, key:%s, value:%s", rspData, key, value)
         return false
     end
     return true
@@ -134,17 +139,16 @@ function mt:_get(key, attr)
     }
 
     local action = self.full_prefix .. "/" .. key
-    local status, rspData = self:_request("GET", action, opts, attr.timeout or self.timeout)
-    if status ~= 200 then
-        Log.error("ectd error get key status:%s, rspData:%s, key:%s",status, rspData, key)
+    local rspData = self:_request("GET", action, opts, attr.timeout or self.timeout)
+    if not rspData then
+        Log.error("ectd error get key rspData:%s, key:%s", rspData, key)
         return false
     end
 
-    local data = Json.decode(rspData)
     if attr.dir then
-        return data.nodes
+        return rspData.node.nodes
     end
-    return data.node.value
+    return rspData.node.value
 end
 
 function mt:_delete(key, attr)
@@ -173,9 +177,9 @@ function mt:_delete(key, attr)
         },
     }
     local action = self.full_prefix .. "/" .. key
-    local status, rspData = self:_request("DELETE", action, opts, self.timeout)
-    if status ~= 200 then
-        Log.error("ectd error delete key status:%s, rspData:%s, key:%s",status, rspData, key)
+    local rspData = self:_request("DELETE", action, opts, self.timeout)
+    if not rspData then
+        Log.error("ectd error delete key rspData:%s, key:%s", rspData, key)
         return false
     end
     return true
