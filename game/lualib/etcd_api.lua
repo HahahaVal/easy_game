@@ -1,13 +1,14 @@
 local Httpc = require "http.httpc"
 local Json = require "json"
 local Log = require "log_api"
-
-local INIT_COUNT_RESIZE = 2e8
+local Skynet = require "skynet"
 
 local M = {}
 
 local mt = {}
 mt.__index = mt
+
+local fail_hosts = {}
 
 Httpc.dns() -- 异步查询 dns，避免阻塞整个 skynet 的网络消息
 
@@ -25,19 +26,33 @@ local function get_real_key(prefix, key)
     return (type(prefix) == 'string' and prefix or "") .. key
 end
 
+function mt:_report_failure(etcd_host)
+    if type(etcd_host) ~= "string" then
+        return false
+    end
+    fail_hosts[etcd_host] = Skynet.now() + self.fail_time
+end
+
+function mt:_get_target_status(etcd_host)
+    if type(etcd_host) ~= "string" then
+        return false
+    end
+    local fail_expired_time = fail_hosts[etcd_host]
+    if fail_expired_time and fail_expired_time >= Skynet.now() then
+        return false
+    else
+        return true
+    end
+end
+
 function mt:_choose_endpoint()
     local hosts = self.hosts
-    local hosts_len = #hosts
-    if hosts_len == 1 then
-        return hosts[1]
+    for _, host in ipairs(hosts) do
+        if self:_get_target_status(host) then
+            return host
+        end
     end
-
-    self.init_count = (self.init_count or 0) + 1
-    local pos = self.init_count % hosts_len + 1
-    if self.init_count >= INIT_COUNT_RESIZE then
-        self.init_count = 0
-    end
-    return hosts[pos]
+    return false
 end
 
 function mt:_request(method, action, opts, timeout)
@@ -64,13 +79,16 @@ function mt:_request(method, action, opts, timeout)
     local success, status, rspData = pcall(Httpc.request, method, reqHost, action, recvheader, header, reqData)
     Log.debug("request method:%s host:%s action:%s reqData:%s rspData:%s", method, reqHost, action, reqData, rspData)
     if not success then
+        self:_report_failure(reqHost)
         Log.error("request error status:%s", status)
         return false
     end
-    if status < 200 or status >= 300 then
+    if status > 500 then
+        self:_report_failure(reqHost)
         Log.error("invalid response status:%s", status)
         return false
     end
+
     return Json.decode(rspData)
 end
 
@@ -375,10 +393,10 @@ function M.new(hosts, full_prefix, timeout)
     end
     local obj = {
         hosts = hosts,
-        init_count = 0,
         key_prefix = "",
         full_prefix = full_prefix or "/v2/keys",
         timeout = timeout or 5,
+        fail_time = 30,
     }
     return setmetatable(obj, mt)
 end
