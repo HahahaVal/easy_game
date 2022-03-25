@@ -386,15 +386,15 @@ function mt:push(key, val, ttl)
     return self:_set(key, val, attr)
 end
 
-function M.new(hosts, full_prefix, timeout)
+function M.new(hosts, key_prefix, timeout)
     if type(hosts) ~= "table" then
         Log.error("hosts must be table")
         return false
     end
     local obj = {
+        full_prefix = "/v2/keys",
         hosts = hosts,
-        key_prefix = "",
-        full_prefix = full_prefix or "/v2/keys",
+        key_prefix = key_prefix,
         timeout = timeout or 5,
         fail_time = 30,
     }
