@@ -122,7 +122,7 @@ function mt:_set(key, value, attr)
             prevExist = prev_exist,
         },
     }
-    local action = self.full_prefix .. "/" .. key
+    local action = self.full_prefix .. key
     local rspData = self:_request(attr.in_order and 'POST' or 'PUT', action, opts, self.timeout)
     if not rspData then
         Log.error("ectd error set key rspData:%s, key:%s, value:%s", rspData, key, value)
@@ -156,7 +156,7 @@ function mt:_get(key, attr)
         }
     }
 
-    local action = self.full_prefix .. "/" .. key
+    local action = self.full_prefix .. key
     local rspData = self:_request("GET", action, opts, attr.timeout or self.timeout)
     if not rspData then
         Log.error("ectd error get key rspData:%s, key:%s", rspData, key)
@@ -194,7 +194,7 @@ function mt:_delete(key, attr)
             prevValue = attr.prev_value and Json.encode(attr.prev_value),
         },
     }
-    local action = self.full_prefix .. "/" .. key
+    local action = self.full_prefix .. key
     local rspData = self:_request("DELETE", action, opts, self.timeout)
     if not rspData then
         Log.error("ectd error delete key rspData:%s, key:%s", rspData, key)
@@ -319,6 +319,20 @@ function mt:mkdir(key, ttl)
     local attr = {}
     attr.ttl = ttl
     attr.dir = true
+
+    key = get_real_key(self.key_prefix, key)
+
+    return self:_set(key, nil, attr)
+end
+
+--[[
+    refresh dir and ttl
+--]]
+function mt:refresh_dir(key, ttl)
+    local attr = {}
+    attr.ttl = ttl
+    attr.dir = true
+    attr.prev_exist = true
 
     key = get_real_key(self.key_prefix, key)
 
