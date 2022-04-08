@@ -97,9 +97,6 @@ function mt:_set(key, value, attr)
         Log.error("set key invalid")
         return false
     end
-    if value then
-        value = Json.encode(value)
-    end
 
     attr = attr or {}
     local prev_exist
@@ -122,7 +119,7 @@ function mt:_set(key, value, attr)
             value = value,
             ttl = attr.ttl,
             dir = dir,
-            prevValue = attr.prev_value and Json.encode(attr.prev_value),
+            prevValue = attr.prev_value,
             prevIndex = attr.prev_index,
             prevExist = prev_exist,
             refresh = refresh,
@@ -200,7 +197,7 @@ function mt:_delete(key, attr)
             dir = attr_dir,
             prevIndex = attr.prev_index,
             recursive = attr_recursive,
-            prevValue = attr.prev_value and Json.encode(attr.prev_value),
+            prevValue = attr.prev_value,
         },
     }
     local action = self.full_prefix .. key
@@ -271,6 +268,20 @@ function mt:set(key, val, ttl)
     key = get_real_key(self.key_prefix, key)
 
     return self:_set(key, val, attr)
+end
+
+--[[
+    refresh key-val and ttl
+--]]
+function mt:refresh_val(key, ttl)
+    local attr = {}
+    attr.ttl = ttl
+    attr.prev_exist = true
+    attr.refresh = true
+
+    key = get_real_key(self.keyPrefix, key)
+
+    return self:_set(key, nil, attr)
 end
 
 --[[
