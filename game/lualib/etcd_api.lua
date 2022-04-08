@@ -69,7 +69,7 @@ function mt:_request(method, action, opts, timeout)
         reqData = format_params(opts.body)
     end
 
-    Httpc.timeout = timeout * 100
+    Httpc.timeout = timeout and timeout * 100
 
 	local header = {
 		["content-type"] = "application/x-www-form-urlencoded"
@@ -112,6 +112,11 @@ function mt:_set(key, value, attr)
         dir = attr.dir and 'true' or 'false'
     end
 
+    local refresh
+    if attr.refresh then
+        refresh =  attr.refresh and 'true' or 'false'
+    end
+
     local opts = {
         body = {
             value = value,
@@ -120,6 +125,7 @@ function mt:_set(key, value, attr)
             prevValue = attr.prev_value and Json.encode(attr.prev_value),
             prevIndex = attr.prev_index,
             prevExist = prev_exist,
+            refresh = refresh,
         },
     }
     local action = self.full_prefix .. key
@@ -148,8 +154,14 @@ function mt:_get(key, attr)
         attr_recursive = attr.recursive and 'true' or 'false'
     end
 
+    local dir
+    if attr.dir then
+        dir = attr.dir and 'true' or 'false'
+    end
+
     local opts = {
         query = {
+            dir = dir,
             wait = attr_wait,
             waitIndex = attr.wait_index,
             recursive = attr_recursive,
@@ -157,16 +169,13 @@ function mt:_get(key, attr)
     }
 
     local action = self.full_prefix .. key
-    local rspData = self:_request("GET", action, opts, attr.timeout or self.timeout)
+    local rspData = self:_request("GET", action, opts, attr.timeout)
     if not rspData then
         Log.error("ectd error get key rspData:%s, key:%s", rspData, key)
         return false
     end
 
-    if attr.dir then
-        return rspData.node.nodes
-    end
-    return rspData.node.value
+    return rspData
 end
 
 function mt:_delete(key, attr)
@@ -214,7 +223,8 @@ function mt:get(key)
 
     key = get_real_key(self.key_prefix, key)
 
-    return self:_get(key)
+    local rspData = self:_get(key)
+    return rspData.node.value
 end
 
 --[[
@@ -241,7 +251,8 @@ function mt:wait(key, modified_index, timeout)
 
     key = get_real_key(self.key_prefix, key)
 
-    return self:_get(key, attr)
+    local rspData = self:_get(key, attr)
+    return rspData.node.key
 end
 
 --[[
@@ -333,6 +344,7 @@ function mt:refresh_dir(key, ttl)
     attr.ttl = ttl
     attr.dir = true
     attr.prev_exist = true
+    attr.refresh = true
 
     key = get_real_key(self.key_prefix, key)
 
@@ -350,7 +362,8 @@ function mt:read_dir(key, recursive)
 
     key = get_real_key(self.key_prefix, key)
 
-    return self:_get(key, attr)
+    local rspData = self:_get(key, attr)
+    return  rspData.node.nodes
 end
 
 --[[
@@ -371,7 +384,8 @@ function mt:wait_dir(key, modified_index, timeout)
 
     key = get_real_key(self.key_prefix, key)
 
-    return self:_get(key, attr)
+    local rspData = self:_get(key, attr)
+    return rspData.node.key
 end
 
 --[[
