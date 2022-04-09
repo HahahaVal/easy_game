@@ -12,12 +12,25 @@ local fail_hosts = {}
 
 Httpc.dns() -- 异步查询 dns，避免阻塞整个 skynet 的网络消息
 
+local function url_decode(str)
+    local str = str:gsub('+', ' ')
+    return (str:gsub("%%(%x%x)", function(c)
+                         return string.char(tonumber(c, 16))
+                                 end))
+end
+
+local function url_encode(str)
+    return (str:gsub("([^A-Za-z0-9%_%.%-%~])", function(v)
+                         return string.upper(string.format("%%%02x", string.byte(v)))
+                                               end))
+end
+
 local function format_params(params)
     local paramsT = {}
 	for k, v in pairs(params) do
 		local key = tostring(k)
 		local value = tostring(v)
-        table.insert(paramsT, key .. "=" .. value)
+        table.insert(paramsT, url_encode(key) .. "=" .. url_encode(value))
 	end
 	return table.concat(paramsT, "&")
 end
@@ -89,7 +102,19 @@ function mt:_request(method, action, opts, timeout)
         return false
     end
 
-    return Json.decode(rspData)
+    local res_tbl = Json.decode(rspData)
+
+    if not res_tbl then
+        return false
+    end
+
+    local ret = {}
+    for k, v in pairs(res_tbl) do
+        local key = url_decode(tostring(k))
+        local val = url_decode(tostring(v))
+        ret[key] = val
+    end
+    return ret
 end
 
 function mt:_set(key, value, attr)
@@ -114,12 +139,16 @@ function mt:_set(key, value, attr)
         refresh =  attr.refresh and 'true' or 'false'
     end
 
+    if value then
+        value = Json.encode(value)
+    end
+
     local opts = {
         body = {
             value = value,
             ttl = attr.ttl,
             dir = dir,
-            prevValue = attr.prev_value,
+            prevValue = attr.prev_value and Json.encode(attr.prev_value),
             prevIndex = attr.prev_index,
             prevExist = prev_exist,
             refresh = refresh,
@@ -197,7 +226,7 @@ function mt:_delete(key, attr)
             dir = attr_dir,
             prevIndex = attr.prev_index,
             recursive = attr_recursive,
-            prevValue = attr.prev_value,
+            prevValue = attr.prev_value and Json.encode(attr.prev_value),
         },
     }
     local action = self.full_prefix .. key
