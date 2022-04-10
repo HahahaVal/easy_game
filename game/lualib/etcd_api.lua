@@ -25,6 +25,15 @@ local function url_encode(str)
                                                end))
 end
 
+local function tab_exist(val)
+    if type(val) == "table" then
+        if next(val) then
+            return true
+        end
+    end
+    return false
+end
+
 local function format_params(params)
     local paramsT = {}
 	for k, v in pairs(params) do
@@ -102,19 +111,7 @@ function mt:_request(method, action, opts, timeout)
         return false
     end
 
-    local res_tbl = Json.decode(rspData)
-
-    if not res_tbl then
-        return false
-    end
-
-    local ret = {}
-    for k, v in pairs(res_tbl) do
-        local key = url_decode(tostring(k))
-        local val = url_decode(tostring(v))
-        ret[key] = val
-    end
-    return ret
+    return Json.decode(rspData)
 end
 
 function mt:_set(key, value, attr)
@@ -139,7 +136,7 @@ function mt:_set(key, value, attr)
         refresh =  attr.refresh and 'true' or 'false'
     end
 
-    if value then
+    if value and tab_exist(value) then
         value = Json.encode(value)
     end
 
@@ -148,7 +145,7 @@ function mt:_set(key, value, attr)
             value = value,
             ttl = attr.ttl,
             dir = dir,
-            prevValue = attr.prev_value and Json.encode(attr.prev_value),
+            prevValue = attr.prev_value and tab_exist(attr.prev_value) and Json.encode(attr.prev_value),
             prevIndex = attr.prev_index,
             prevExist = prev_exist,
             refresh = refresh,
@@ -196,7 +193,7 @@ function mt:_get(key, attr)
 
     local action = self.full_prefix .. key
     local rspData = self:_request("GET", action, opts, attr.timeout)
-    if not rspData then
+    if not rspData or not tab_exist(rspData) then
         Log.error("ectd error get key rspData:%s, key:%s", rspData, key)
         return false
     end
@@ -226,7 +223,7 @@ function mt:_delete(key, attr)
             dir = attr_dir,
             prevIndex = attr.prev_index,
             recursive = attr_recursive,
-            prevValue = attr.prev_value and Json.encode(attr.prev_value),
+            prevValue = attr.prev_value and tab_exist(attr.prev_value) and Json.encode(attr.prev_value),
         },
     }
     local action = self.full_prefix .. key
@@ -250,7 +247,14 @@ function mt:get(key)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key)
-    return rspData.node.value
+
+    if rspData and rspData.node.value then
+        local tb = Json.decode(rspData.node.value)
+        if tb then
+            return tb
+        end
+    end
+    return rspData and rspData.node.value
 end
 
 --[[
@@ -278,7 +282,7 @@ function mt:wait(key, modified_index, timeout)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
-    return rspData.node.key
+    return rspData and rspData.node.key
 end
 
 --[[
@@ -403,7 +407,7 @@ function mt:read_dir(key, recursive)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
-    return  rspData.node.nodes
+    return rspData and rspData.node.nodes
 end
 
 --[[
@@ -425,7 +429,7 @@ function mt:wait_dir(key, modified_index, timeout)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
-    return rspData.node.key
+    return rspData and rspData.node.key
 end
 
 --[[
