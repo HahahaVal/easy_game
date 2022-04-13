@@ -407,6 +407,16 @@ function mt:read_dir(key, recursive)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
+
+    if rspData and rspData.node.nodes then
+        local nodes = rspData.node.nodes
+        for _, node in pairs(nodes) do
+            local tb = Json.decode(node.value)
+            if tb then
+                node.value = tb
+            end
+        end
+    end
     return rspData and rspData.node.nodes
 end
 
