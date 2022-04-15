@@ -248,13 +248,11 @@ function mt:get(key)
 
     local rspData = self:_get(key)
 
-    if rspData and rspData.node.value then
-        local tb = Json.decode(rspData.node.value)
-        if tb then
-            return tb
-        end
+    if not rspData or not rspData.node.value then
+        return false
     end
-    return rspData and rspData.node.value
+
+    return Json.decode(rspData.node.value)
 end
 
 --[[
@@ -282,7 +280,12 @@ function mt:wait(key, modified_index, timeout)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
-    return rspData and rspData.node.key
+
+    if not rspData then
+        return false
+    end
+
+    return rspData.action, rspData.node.key, rspData.node.value and Json.decode(rspData.node.value)
 end
 
 --[[
@@ -408,16 +411,21 @@ function mt:read_dir(key, recursive)
 
     local rspData = self:_get(key, attr)
 
-    if rspData and rspData.node.nodes then
-        local nodes = rspData.node.nodes
-        for _, node in pairs(nodes) do
-            local tb = Json.decode(node.value)
-            if tb then
-                node.value = tb
-            end
+    if not rspData then
+        return false
+    end
+    local nodes = rspData.node.nodes
+    if not nodes then
+        return false
+    end
+
+    for _, node in pairs(nodes) do
+        local tb = Json.decode(node.value)
+        if tb then
+            node.value = tb
         end
     end
-    return rspData and rspData.node.nodes
+    return nodes
 end
 
 --[[
@@ -439,7 +447,12 @@ function mt:wait_dir(key, modified_index, timeout)
     key = get_real_key(self.key_prefix, key)
 
     local rspData = self:_get(key, attr)
-    return rspData and rspData.node.key
+
+    if not rspData then
+        return false
+    end
+
+    return rspData.action, rspData.node.key, rspData.node.value and Json.decode(rspData.node.value)
 end
 
 --[[
