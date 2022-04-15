@@ -111,7 +111,9 @@ function mt:_request(method, action, opts, timeout)
         return false
     end
 
-    return Json.decode(rspData)
+    local result = Json.decode(rspData)
+    result.recvheader = recvheader
+    return result
 end
 
 function mt:_set(key, value, attr)
@@ -161,7 +163,7 @@ function mt:_set(key, value, attr)
 end
 
 function mt:_get(key, attr)
-    if not key or key == '/' then
+    if not key then
         Log.error("get key invalid")
         return false
     end
@@ -285,7 +287,8 @@ function mt:wait(key, modified_index, timeout)
         return false
     end
 
-    return rspData.action, rspData.node.key, rspData.node.value and Json.decode(rspData.node.value)
+    local node = rspData.node
+    return rspData.action, node.key, node.modifiedIndex, node.value and Json.decode(node.value)
 end
 
 --[[
@@ -452,7 +455,8 @@ function mt:wait_dir(key, modified_index, timeout)
         return false
     end
 
-    return rspData.action, rspData.node.key, rspData.node.value and Json.decode(rspData.node.value)
+    local node = rspData.node
+    return rspData.action, node.key, node.modifiedIndex, node.value and Json.decode(node.value)
 end
 
 --[[
@@ -479,6 +483,15 @@ function mt:push(key, val, ttl)
     key = get_real_key(self.key_prefix, key)
 
     return self:_set(key, val, attr)
+end
+
+--[[
+   get recvheader
+--]]
+function mt:get_recvheader()
+    local key = get_real_key(self.keyPrefix, '/')
+    local rspData = self:_get(key)
+    return rspData and rspData.recvheader
 end
 
 function M.new(hosts, key_prefix, timeout)
