@@ -34,6 +34,13 @@ local function tab_exist(val)
     return false
 end
 
+local function verify_key(key)
+    if not key or #key == 0 then
+        return false
+    end
+    return true
+end
+
 local function format_params(params)
     local paramsT = {}
 	for k, v in pairs(params) do
@@ -117,7 +124,7 @@ function mt:_request(method, action, opts, timeout)
 end
 
 function mt:_set(key, value, attr)
-    if not key or key == '/' then
+    if not verify_key(key) then
         Log.error("set key invalid")
         return false
     end
@@ -163,7 +170,7 @@ function mt:_set(key, value, attr)
 end
 
 function mt:_get(key, attr)
-    if not key then
+    if not verify_key(key) then
         Log.error("get key invalid")
         return false
     end
@@ -204,7 +211,7 @@ function mt:_get(key, attr)
 end
 
 function mt:_delete(key, attr)
-    if not key or key == '/' then
+    if not verify_key(key) then
         Log.error("delete key invalid")
         return false
     end
@@ -241,7 +248,7 @@ end
     get value by key
 --]]
 function mt:get(key)
-    if not tostring(key) then
+    if not verify_key(key) then
         Log.error('key must be string')
         return false
     end
@@ -265,7 +272,7 @@ end
     timeout：超时等待时间
 --]]
 function mt:wait(key, modified_index, timeout)
-    if not tostring(key) then
+    if not verify_key(key) then
         Log.error('key must be string')
         return false
     end
@@ -296,7 +303,7 @@ end
     ttl:存活时长
 --]]
 function mt:set(key, val, ttl)
-    if not tostring(key) then
+    if not verify_key(key) then
         Log.error('key must be string')
         return false
     end
