@@ -3,7 +3,7 @@ local Skynet = require "znet"
 local function launch_share()
     Skynet.uniqueservice("logger")
     Skynet.monitor("monitor")
-    
+
     local port = assert(tonumber(Skynet.getenv("console_port")))
     Skynet.uniqueservice("debug_console", port)
 end
@@ -12,6 +12,7 @@ local function launch_local()
     Skynet.uniqueservice("proxy")
     Skynet.uniqueservice(true, "role_db")
     Skynet.uniqueservice("hall")
+    Skynet.uniqueservice("etcd")
 end
 
 local function init()

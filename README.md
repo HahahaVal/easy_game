@@ -7,6 +7,7 @@
 * role_db服务：使用lru缓存玩家数据，读写mongo数据库  
 * hall服务：分配和释放agent池,管理所有user，根据fd处理sproto协议  
 * agent服务：多个role公用一个agent，根据fd找到指定role处理sproto协议  
+* etcd服务：注册自身节点数据到etcd服务器，定时续约，并监听其他节点数据的变更
 
 # 环境构建
 sudo python env_build.py 
