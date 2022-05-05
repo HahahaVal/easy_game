@@ -6,6 +6,8 @@ local Log = require "log_api"
 
 local encode_base64 = crypt.base64encode
 local decode_base64 = crypt.base64decode
+local decode_json = Json.decode
+local encode_json = Json.encode
 
 local sub_str = string.sub
 local str_byte = string.byte
@@ -85,7 +87,7 @@ end
 
 local function serialize_and_encode_base64(value)
     if tab_exist(value) then
-        value = Json.encode(value)
+        value = encode_json(value)
     end
 
     if not value then
@@ -155,7 +157,7 @@ function mt:_request(method, action, opts, timeout)
 
     local reqData
     if opts.body and next(opts.body) then
-        reqData = Json.encode(opts.body)
+        reqData = encode_json(opts.body)
     end
 
     Httpc.timeout = timeout and timeout * 100
@@ -187,7 +189,7 @@ function mt:_request(method, action, opts, timeout)
         return false
     end
 
-    local result = Json.decode(rspData)
+    local result = decode_json(rspData)
     result.recvheader = recvheader
     return result
 end
@@ -345,7 +347,7 @@ function mt:_get(key, attr)
         for _, kv in ipairs(rspData.kvs) do
             kv.key = decode_base64(kv.key)
             kv.value = decode_base64(kv.value or "")
-            kv.value = Json.decode(kv.value)
+            kv.value = decode_json(kv.value)
         end
     end
 
@@ -439,7 +441,7 @@ function mt:_request_stream(method, action, opts, timeout)
 
     local reqData
     if opts.body and next(opts.body) then
-        reqData = Json.encode(opts.body)
+        reqData = encode_json(opts.body)
     end
 
     Httpc.timeout = timeout and timeout * 100
@@ -475,7 +477,7 @@ function mt:_request_stream(method, action, opts, timeout)
             return false
         end
 
-        local data = Json.decode(chunk)
+        local data = decode_json(chunk)
         if not data then
             Log.error("failed to decode json data: " .. chunk)
             return false
@@ -487,12 +489,12 @@ function mt:_request_stream(method, action, opts, timeout)
             for _, event in ipairs(data.events) do
                 if event.kv.value then   -- DELETE not have value
                     event.kv.value = decode_base64(event.kv.value or "")
-                    event.kv.value = Json.decode(event.kv.value)
+                    event.kv.value = decode_json(event.kv.value)
                 end
                 event.kv.key = decode_base64(event.kv.key)
                 if event.prev_kv then
                     event.prev_kv.value = decode_base64(event.prev_kv.value or "")
-                    event.prev_kv.value = Json.decode(event.prev_kv.value)
+                    event.prev_kv.value = decode_json(event.prev_kv.value)
                     event.prev_kv.key = decode_base64(event.prev_kv.key)
                 end
                 table.insert(all_events, event)
@@ -726,7 +728,7 @@ function mt:setx(key, val, opts)
     local compare = {}
     compare[1] = {}
     compare[1].target = "CREATE"
-    compare[1].key    = encode_base64(key)
+    compare[1].key = encode_base64(key)
     compare[1].createRevision = 0
 
     local failure = {}
