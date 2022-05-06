@@ -8,9 +8,12 @@ env = root_path+"/env"
 subprocess.call("mkdir -p "+env, shell = True)
 
 def yum():
-    #centos7替换yum源
-    subprocess.call("wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo", shell = True)
-
+    #centos8替换yum源
+    subprocess.call("cd /etc/yum.repos.d/", shell = True)
+    subprocess.call("rm -rf *", shell = True)
+    subprocess.call("wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-vault-8.5.2111.repo", shell = True)
+    subprocess.call("yum makecache", shell = True)
+ 
 def python():
     #安装python3
     subprocess.call("sudo yum install python3 -y", shell = True)
@@ -37,24 +40,6 @@ def cmake():
     cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 + "&&" + cmd7
     subprocess.call(cmd, shell = True)
 
-def gcc():
-    #安装gcc4.9.4
-    cmd1 = "cd "+env
-    cmd2 = "wget http://ftp.gnu.org/gnu/gcc/gcc-4.9.4/gcc-4.9.4.tar.gz"
-    cmd3 = "tar xzvf gcc-4.9.4.tar.gz "
-    cmd4 = "cd gcc-4.9.4/"
-    cmd5 = "./contrib/download_prerequisites"
-    cmd6 = "./configure --enable-checking=release --enable-languages=c,c++ --disable-multilib"
-    cmd7 = "make -j4"
-    cmd8 = "make install"
-    cmd9 = "echo 'export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64/:$LD_LIBRARY_PATH' | sudo tee -a /etc/profile"
-    cmd10 = "echo 'export C_INCLUDE_PATH=/usr/local/include/:$C_INCLUDE_PATH' | sudo tee -a /etc/profile"
-    cmd11 = "echo 'export CPLUS_INCLUDE_PATH=/usr/local/include/:$CPLUS_INCLUDE_PATH' | sudo tee -a /etc/profile"
-    cmd12 = "source /etc/profile"
-    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 + "&&" + cmd7 
-            + "&&" + cmd8 + "&&" + cmd9 + "&&" + cmd10 + "&&" + cmd11 + "&&" + cmd12
-    subprocess.call(cmd, shell = True)
-
 def lua():
     #安装lua5.4
     cmd1 = "cd "+env
@@ -75,9 +60,8 @@ def go():
     cmd5 = "echo 'export PATH=$PATH:$GOROOT/bin' | sudo tee -a /etc/profile"
     cmd6 = "echo 'export GOPROXY=https://goproxy.io' | sudo tee -a /etc/profile"
     cmd7 = "source /etc/profile"
-    cmd8 = "go mod tidy"
 
-    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 + "&&" + cmd7 + "&&" + cmd8
+    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 + "&&" + cmd7
     subprocess.call(cmd, shell = True)
 
 def mongo():
@@ -101,7 +85,6 @@ def main():
     python()
     rely()
     cmake()
-    gcc()
     lua()
     mongo()
 
