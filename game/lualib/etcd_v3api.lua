@@ -12,6 +12,7 @@ local encode_json = Json.encode
 local sub_str = string.sub
 local str_byte = string.byte
 local str_char = string.char
+local tinsert = table.insert
 
 local NONEXIST = "has no healthy etcd endpoint available"
 
@@ -80,7 +81,7 @@ local function format_params(params)
 	for k, v in pairs(params) do
 		local key = tostring(k)
 		local value = tostring(v)
-        table.insert(paramsT, url_encode(key) .. "=" .. url_encode(value))
+        tinsert(paramsT, url_encode(key) .. "=" .. url_encode(value))
 	end
 	return table.concat(paramsT, "&")
 end
@@ -246,7 +247,7 @@ function mt:_set(key, value, attr)
         Log.error("ectd error set rspData:%s, key:%s, value:%s", rspData, key, value)
         return false
     end
-    return true
+    return rspData
 end
 
 function mt:_get(key, attr)
@@ -386,7 +387,7 @@ function mt:_delete(key, attr)
         Log.error("ectd error delete rspData:%s, key:%s", rspData, key)
         return false
     end
-    return true
+    return rspData
 end
 
 function mt:_txn(opts_arg, compare, success, failure)
@@ -414,7 +415,7 @@ function mt:_txn(opts_arg, compare, success, failure)
         Log.error("ectd error txn rspData:%s", rspData)
         return false
     end
-    return true
+    return rspData
 end
 
 function mt:_http_request_stream(method, action, recvheader, header, reqData)
@@ -428,7 +429,7 @@ function mt:_http_request_stream(method, action, recvheader, header, reqData)
         self:_report_failure(reqHost)
         return false, reqHost .. ": request_stream error"
     end
-    return stream, error, reqHost
+    return stream, nil, reqHost
 end
 
 function mt:_request_stream(method, action, opts, timeout)
@@ -497,13 +498,14 @@ function mt:_request_stream(method, action, opts, timeout)
                     event.prev_kv.value = decode_json(event.prev_kv.value)
                     event.prev_kv.key = decode_base64(event.prev_kv.key)
                 end
-                table.insert(all_events, event)
+                tinsert(all_events, event)
             end
         end
-        return all_events
+        data.events = all_events
+        return data
     end
 
-    return read_watch
+    return read_watch, stream._interface
 end
 
 function mt:_watch(key, attr)
@@ -565,12 +567,13 @@ function mt:_watch(key, attr)
 
     local endpoint = self:_choose_endpoint()
     if not endpoint then
+        Log.error(NONEXIST)
         return false
     end
 
-    local callback_fun = self:_request_stream('POST', '/watch', opts, attr.timeout or self.timeout)
+    local callback_fun, interface = self:_request_stream('POST', '/watch', opts, attr.timeout or self.timeout)
 
-    return callback_fun
+    return callback_fun, interface
 end
 
 --[[
@@ -608,7 +611,6 @@ function mt:watch(key, opts)
     attr.prev_kv = opts and opts.prev_kv
     attr.watch_id = opts and opts.watch_id
     attr.fragment = opts and opts.fragment
-    attr.need_cancel = opts and opts.need_cancel
 
     return self:_watch(key, attr)
 end
@@ -616,8 +618,8 @@ end
 --[[
     cancel watch key
 ]]
-function mt:watchcancel(http_cli)
-    http_cli:_onclose()
+function mt:watchcancel(interface)
+    interface:_onclose()
 end
 
 --[[
@@ -663,7 +665,6 @@ function mt:watchdir(key, opts)
     attr.prev_kv = opts and opts.prev_kv
     attr.watch_id = opts and opts.watch_id
     attr.fragment = opts and opts.fragment
-    attr.need_cancel = opts and opts.need_cancel
 
     return self:_watch(key, attr)
 end
@@ -710,6 +711,11 @@ function mt:setnx(key, val, opts)
     success[1].requestPut.key = encode_base64(key)
 
     val = serialize_and_encode_base64(val)
+    if not val then
+        Log.error("setnx value invalid")
+        return false
+    end
+
     success[1].requestPut.value = val
 
     return self:_txn(opts, compare, success, nil)
@@ -737,6 +743,10 @@ function mt:setx(key, val, opts)
     failure[1].requestPut.key = encode_base64(key)
 
     val = serialize_and_encode_base64(val)
+    if not val then
+        Log.error("setx value invalid")
+        return false
+    end
     failure[1].requestPut.value = val
 
     return self:_txn(opts, compare, nil, failure)
@@ -752,6 +762,10 @@ function mt:txn(compare, success, failure, opts)
 
             if rule.value then
                 rule.value = serialize_and_encode_base64(rule.value)
+                if not rule.value then
+                    Log.error("txn value invalid")
+                    return false
+                end
             end
 
             new_rules[i] = rule
@@ -767,7 +781,10 @@ function mt:txn(compare, success, failure, opts)
                 local requestPut = tab_clone(rule.requestPut)
                 requestPut.key = encode_base64(get_real_key(self.key_prefix, requestPut.key))
                 requestPut.value = serialize_and_encode_base64(requestPut.value)
-
+                if not requestPut.value then
+                    Log.error("txn value invalid")
+                    return false
+                end
                 if not requestPut.value then
                     Log.error("failed to encode value")
                     return false
@@ -857,7 +874,7 @@ function mt:timetolive(id, keys)
         end
     end
 
-    return data.keys
+    return data
 end
 
 function mt:leases()
