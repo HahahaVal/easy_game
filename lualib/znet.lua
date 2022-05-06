@@ -2,7 +2,7 @@ local Skynet = require "skynet"
 local Sys = require "sys"
 require "skynet.manager"
 
-math.randomseed(Skynet.time())
+math.randomseed(math.floor(Skynet.time()))
 
 
 --注册c服务的函数处理
