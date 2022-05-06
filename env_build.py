@@ -86,6 +86,7 @@ def main():
     rely()
     cmake()
     lua()
+    go()
     mongo()
 
 if __name__ == "__main__":
