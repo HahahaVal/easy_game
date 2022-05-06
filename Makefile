@@ -18,7 +18,7 @@ all: build submodule
 
 
 submodule:
-	 git submodule update --init
+	git submodule update --init
 
 
 build:
