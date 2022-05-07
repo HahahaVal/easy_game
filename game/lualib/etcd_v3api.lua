@@ -139,7 +139,7 @@ function mt:_http_request_uri(method, action, recvheader, header, reqData)
     -- Log.debug("request method:%s host:%s action:%s reqData:%s rspData:%s", method, reqHost, action, reqData, rspData)
     if not success then
         self:_report_failure(reqHost)
-        return false, reqHost .. ":" .. rspData
+        return false, reqHost .. ":" .. (rspData or "")
     end
     if status >= 500 then
         self:_report_failure(reqHost)
@@ -471,10 +471,15 @@ function mt:_request_stream(method, action, opts, timeout)
     end
 
     local function read_watch()
-        local success, chunk = pcall(stream._reading)
+        local success, chunk = pcall(stream._reading, stream)
         if not success then
-            Log.error(reqHost .. ": request_stream error")
+            Log.error(reqHost .. ": request_stream error," .. chunk)
             self:_report_failure(reqHost)
+            return false
+        end
+
+        if not chunk then
+            Log.error("chunk is nil: ")
             return false
         end
 

@@ -7,7 +7,7 @@ local util = {
 }
 
 local function _repr(T,CR)
-    assert(type(T) == "table")
+    assert(type(T) == "table", type(T))
 
 	CR = CR or '\r\n'
 	local cache = {  [T] = "." }
