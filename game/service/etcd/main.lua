@@ -22,8 +22,8 @@ local function __init__()
     local hosts = {"127.0.0.1:2379",}
     Env.etcd_client = EtcdClient.new(hosts, root)
 
-    local grant_id = serverid
-    Env.etcd_client:grant(etcd_ttl, grant_id)
+    local grant = Env.etcd_client:grant(etcd_ttl, 0)
+    local grant_id = grant.ID
 
     local node_data = {
 		cid = serverid,
@@ -44,16 +44,32 @@ local function __init__()
 
     --监听
     Skynet.fork(function ()
-        local reader, stream = Env.etcd_client:watchdir(prefix)
-        while true do
-            local data = reader()
-            if not data then
-                break
-            else
-                util.Table.print(data or {})
+        local version
+        local function reset_watch()
+            local opts = {
+                start_revision = version
+            }
+            local reader, stream = Env.etcd_client:watchdir(prefix, opts)
+            if not reader then
+                return false
             end
+            while true do
+                local data = reader()
+                if data.error then
+                    break
+                else
+                    util.Table.print(data or {})
+                    version = data.result.header.revision
+                end
+            end
+            --连接异常
+            Env.etcd_client:watchcancel(stream)
         end
-        Env.etcd_client:watchcancel(stream)
+
+        while true do
+            reset_watch()
+            Skynet.sleep(500)
+        end
     end)
 end
 
