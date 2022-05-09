@@ -510,7 +510,7 @@ function mt:_request_stream(method, action, opts, timeout)
         return data
     end
 
-    return read_watch, stream._interface
+    return read_watch, stream
 end
 
 function mt:_watch(key, attr)
@@ -576,9 +576,9 @@ function mt:_watch(key, attr)
         return false
     end
 
-    local callback_fun, interface = self:_request_stream('POST', '/watch', opts, attr.timeout or self.timeout)
+    local callback_fun, stream = self:_request_stream('POST', '/watch', opts, attr.timeout or self.timeout)
 
-    return callback_fun, interface
+    return callback_fun, stream
 end
 
 --[[
@@ -623,8 +623,8 @@ end
 --[[
     cancel watch key
 ]]
-function mt:watchcancel(interface)
-    interface:_onclose()
+function mt:watchcancel(stream)
+    stream:_onclose()
 end
 
 --[[
