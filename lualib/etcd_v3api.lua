@@ -587,6 +587,7 @@ end
 function mt:get(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -604,6 +605,7 @@ end
 function mt:watch(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -633,6 +635,7 @@ end
 function mt:readdir(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -656,6 +659,7 @@ end
 function mt:watchdir(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -680,6 +684,7 @@ end
 function mt:set(key, val, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -700,6 +705,7 @@ end
 function mt:setnx(key, val, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -732,6 +738,7 @@ end
 function mt:setx(key, val, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -913,6 +920,7 @@ end
 function mt:delete(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
@@ -927,6 +935,7 @@ end
 function mt:rmdir(key, opts)
     if not verify_key(key) then
         Log.error("key invalid")
+        return false
     end
 
     key = get_real_key(self.key_prefix, key)
