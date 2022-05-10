@@ -80,6 +80,52 @@ gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc
     cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3
     subprocess.call(cmd, shell = True)
 
+def etcd():
+    #安装etcd3.5
+    system = r"""
+[Unit]
+Description=Etcd Server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/opt/etcd/etcd.conf
+ExecStart=/usr/bin/etcd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+"""
+    config = r"""
+ETCD_NAME=etcd1
+ETCD_DATA_DIR="/opt/etcd/default.etcd"
+ETCD_LISTEN_CLIENT_URLS="http://127.0.0.1:2379"
+ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:2379"
+
+ETCD_LISTEN_PEER_URLS="http://127.0.0.1:2380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://127.0.0.1:2380"
+ETCD_INITIAL_CLUSTER="etcd1=http://127.0.0.1:2380"
+ETCD_INITIAL_CLUSTER_STATE="new"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
+"""
+    cmd1 = "cd "+env
+    cmd2 = "wget https://github.com/etcd-io/etcd/releases/download/v3.5.4/etcd-v3.5.4-linux-amd64.tar.gz"
+    cmd3 = "tar xzvf etcd-v3.5.4-linux-amd64.tar.gz"
+    cmd4 = "mv etcd-v3.5.4-linux-amd64 etcd"
+    cmd5 = "cd etcd"
+    cmd6 = "cp etcd etcdctl /usr/bin"
+    cmd7 = "mkdir /opt/etcd/"
+    cmd8 = "mkdir /etc/etcd"
+    cmd9 = "echo -e " +"\'"+ system +"\'"+ " > /usr/lib/systemd/system/etcd.service"
+    cmd10 = "echo -e " +"\'"+ config +"\'"+ " > /etc/etcd/etcd.conf"
+    cmd11 = "systemctl daemon-reload"
+    cmd12 = "systemctl enable etcd"
+    cmd13 = "systemctl start etcd"
+
+    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 \
+            + "&&" + cmd7 + "&&" + cmd8 + "&&" + cmd9 + "&&" + cmd10 + "&&" + cmd11 + "&&" + cmd12 + "&&" + cmd13
+    subprocess.call(cmd, shell = True)
+
 def main():
     yum()
     python()
@@ -88,6 +134,7 @@ def main():
     lua()
     go()
     mongo()
+    etcd()
 
 if __name__ == "__main__":
     main()
