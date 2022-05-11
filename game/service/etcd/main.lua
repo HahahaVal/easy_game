@@ -59,7 +59,7 @@ local function __init__()
                     break
                 else
                     util.Table.print(data or {})
-                    version = data.result.header.revision
+                    version = data.result.header.revision + 1
                 end
             end
             --连接异常

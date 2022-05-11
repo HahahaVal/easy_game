@@ -489,10 +489,8 @@ function mt:_request_stream(method, action, opts, timeout)
             return false
         end
 
-        local all_events = {}
-
-        if data.events then
-            for _, event in ipairs(data.events) do
+        if data.result and data.result.events then
+            for _, event in ipairs(data.result.events) do
                 if event.kv.value then   -- DELETE not have value
                     event.kv.value = decode_base64(event.kv.value or "")
                     event.kv.value = decode_json(event.kv.value)
@@ -503,10 +501,8 @@ function mt:_request_stream(method, action, opts, timeout)
                     event.prev_kv.value = decode_json(event.prev_kv.value)
                     event.prev_kv.key = decode_base64(event.prev_kv.key)
                 end
-                tinsert(all_events, event)
             end
         end
-        data.events = all_events
         return data
     end
 
