@@ -10,6 +10,8 @@ local login_port = assert(Skynet.getenv("login_port"))
 local root = '/nodes'
 local prefix = '/'
 local etcd_ttl = 10									--etcd的TTL
+local user = "root"
+local password = "13169380629"
 
 local function __init__()
     Skynet.dispatch("lua", function(session, address, cmd, ...)
@@ -20,7 +22,13 @@ local function __init__()
 
     --注册
     local hosts = {"127.0.0.1:2379",}
-    Env.etcd_client = EtcdClient.new(hosts, root)
+    local opts = {
+        hosts = hosts,
+        key_prefix = root,
+        user = user,
+        password = password,
+    }
+    Env.etcd_client = EtcdClient.new(opts)
 
     local grant = Env.etcd_client:grant(etcd_ttl, 0)
     local grant_id = grant.ID

@@ -13,6 +13,7 @@ local sub_str = string.sub
 local str_byte = string.byte
 local str_char = string.char
 local tinsert = table.insert
+local random = math.random
 
 local NONEXIST = "has no healthy etcd endpoint available"
 
@@ -101,6 +102,30 @@ local function get_real_key(prefix, key)
     return (type(prefix) == 'string' and prefix or "") .. key
 end
 
+function mt:refresh_jwt_token(timeout)
+    local now = Skynet.now()
+    if self.jwt_token and now - self.last_auth_time < 60 * 3 + random(0, 60) then
+        return true
+    end
+
+    local opts = {
+        body = {
+            name = self.user,
+            password = self.password,
+        }
+    }
+
+    local rspData = self:_request('POST', "/auth/authenticate", opts, timeout, true)
+    if not rspData then
+        Log.error("ectd error refresh jwt token")
+        return false
+    end
+
+    self.jwt_token = rspData.token
+    self.last_auth_time = now
+    return true
+end
+
 function mt:_get_target_status(etcd_host)
     if type(etcd_host) ~= "string" then
         return false
@@ -148,7 +173,7 @@ function mt:_http_request_uri(method, action, recvheader, header, reqData)
     return rspData
 end
 
-function mt:_request(method, action, opts, timeout)
+function mt:_request(method, action, opts, timeout, ignore_auth)
     opts = opts or {}
 
     action = self.full_prefix .. action
@@ -166,6 +191,13 @@ function mt:_request(method, action, opts, timeout)
 	local header = {
 		["content-type"] = "application/x-www-form-urlencoded"
 	}
+
+    if not ignore_auth then
+        if not self:refresh_jwt_token(timeout and timeout * 100) then
+            return false
+        end
+        header.Authorization = self.jwt_token
+    end
 
     local max_retry = #self.hosts * self.max_fail + 1
 
@@ -450,6 +482,11 @@ function mt:_request_stream(method, action, opts, timeout)
 	local header = {
 		["content-type"] = "application/x-www-form-urlencoded"
 	}
+
+    if not self:refresh_jwt_token(timeout and timeout * 100) then
+        return false
+    end
+    header.Authorization = self.jwt_token
 
     local max_retry = #self.hosts * self.max_fail + 1
 
@@ -944,11 +981,33 @@ function mt:rmdir(key, opts)
     return self:_delete(key, attr)
 end
 
-function M.new(hosts, key_prefix, timeout)
+function M.new(opts)
+    local hosts = opts.hosts
+    local key_prefix = opts.key_prefix
+    local timeout = opts.timeout
+    local user = opts.user
+    local password = opts.password
+
     if type(hosts) ~= "table" then
         Log.error("hosts must be table")
         return false
     end
+
+    if key_prefix and type(key_prefix) ~= "string" then
+        Log.error("key_prefix must be string")
+        return false
+    end
+
+    if not user then
+        Log.error("user error")
+        return false
+    end
+
+    if not password then
+        Log.error("password error")
+        return false
+    end
+
     local obj = {
         full_prefix = "/v3",
         hosts = hosts,
@@ -956,6 +1015,10 @@ function M.new(hosts, key_prefix, timeout)
         timeout = timeout or 5,
         fail_time = 30,
         max_fail = 2,
+        user = user,
+        password = password,
+        last_auth_time = nil,
+        jwt_token = nil,
     }
     return setmetatable(obj, mt)
 end

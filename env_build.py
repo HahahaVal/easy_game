@@ -121,9 +121,12 @@ ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
     cmd11 = "systemctl daemon-reload"
     cmd12 = "systemctl enable etcd"
     cmd13 = "systemctl start etcd"
+    cmd14 = "echo "13169380629" | etcdctl user add root"
+    cmd15 = "etcdctl auth enable"
 
     cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 \
-            + "&&" + cmd7 + "&&" + cmd8 + "&&" + cmd9 + "&&" + cmd10 + "&&" + cmd11 + "&&" + cmd12 + "&&" + cmd13
+            + "&&" + cmd7 + "&&" + cmd8 + "&&" + cmd9 + "&&" + cmd10 + "&&" + cmd11 + "&&" + cmd12  \
+            + "&&" + cmd13 + "&&" + cmd14 + "&&" + cmd15
     subprocess.call(cmd, shell = True)
 
 def main():
