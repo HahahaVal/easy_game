@@ -12,7 +12,7 @@ def yum():
     subprocess.call("cd /etc/yum.repos.d/", shell = True)
     subprocess.call("rm -rf *", shell = True)
     subprocess.call("wget -O /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-vault-8.5.2111.repo", shell = True)
-    subprocess.call("yum makecache", shell = True)
+    subprocess.call("yum clean all && yum makecache", shell = True)
  
 def python():
     #安装python3
