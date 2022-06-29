@@ -11,7 +11,7 @@ local root = '/nodes'
 local prefix = '/'
 local etcd_ttl = 10									--etcd的TTL
 local user = "root"
-local password = "13169380629"
+local password = "123456"
 
 local function __init__()
     Skynet.dispatch("lua", function(session, address, cmd, ...)

@@ -80,7 +80,7 @@ gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc
     cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3
     subprocess.call(cmd, shell = True)
 
-def etcd():
+def etcd1():
     #安装etcd3.5
     system = r"""
 [Unit]
@@ -89,7 +89,7 @@ After=network.target
 
 [Service]
 Type=simple
-EnvironmentFile=-/opt/etcd/etcd.conf
+EnvironmentFile=-/etc/etcd/etcd1.conf
 ExecStart=/usr/bin/etcd
 Restart=on-failure
 
@@ -98,13 +98,13 @@ WantedBy=multi-user.target
 """
     config = r"""
 ETCD_NAME=etcd1
-ETCD_DATA_DIR="/opt/etcd/default.etcd"
-ETCD_LISTEN_CLIENT_URLS="http://127.0.0.1:2379"
-ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:2379"
+ETCD_DATA_DIR="/opt/etcd/default1.etcd"
+ETCD_LISTEN_CLIENT_URLS="http://127.0.0.1:12379"
+ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:12379"
 
-ETCD_LISTEN_PEER_URLS="http://127.0.0.1:2380"
-ETCD_INITIAL_ADVERTISE_PEER_URLS="http://127.0.0.1:2380"
-ETCD_INITIAL_CLUSTER="etcd1=http://127.0.0.1:2380"
+ETCD_LISTEN_PEER_URLS="http://127.0.0.1:12380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://127.0.0.1:12380"
+ETCD_INITIAL_CLUSTER="etcd1=http://127.0.0.1:12380,etcd2=http://127.0.0.1:22380,etcd3=http://127.0.0.1:32380"
 ETCD_INITIAL_CLUSTER_STATE="new"
 ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
 """
@@ -114,19 +114,119 @@ ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
     cmd4 = "mv etcd-v3.5.4-linux-amd64 etcd"
     cmd5 = "cd etcd"
     cmd6 = "cp etcd etcdctl /usr/bin"
-    cmd7 = "mkdir /opt/etcd/"
-    cmd8 = "mkdir /etc/etcd"
-    cmd9 = "echo -e " +"\'"+ system +"\'"+ " > /usr/lib/systemd/system/etcd.service"
-    cmd10 = "echo -e " +"\'"+ config +"\'"+ " > /etc/etcd/etcd.conf"
+    cmd7 = "mkdir -p /opt/etcd/"
+    cmd8 = "mkdir -p /etc/etcd"
+    cmd9 = "echo -e " +"\'"+ system +"\'"+ " > /usr/lib/systemd/system/etcd1.service"
+    cmd10 = "echo -e " +"\'"+ config +"\'"+ " > /etc/etcd/etcd1.conf"
     cmd11 = "systemctl daemon-reload"
-    cmd12 = "systemctl enable etcd"
-    cmd13 = "systemctl start etcd"
-    cmd14 = "echo "13169380629" | etcdctl user add root"
-    cmd15 = "etcdctl auth enable"
+    cmd12 = "systemctl enable etcd1"
+    cmd13 = "systemctl restart etcd1"
+    cmd14 = "etcdctl --endpoints=127.0.0.1:12379 user add root <<EOF
+123456
+123456
+EOF"
+    cmd15 = "etcdctl --endpoints=127.0.0.1:12379 auth enable"
 
     cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5 + "&&" + cmd6 \
             + "&&" + cmd7 + "&&" + cmd8 + "&&" + cmd9 + "&&" + cmd10 + "&&" + cmd11 + "&&" + cmd12  \
             + "&&" + cmd13 + "&&" + cmd14 + "&&" + cmd15
+    subprocess.call(cmd, shell = True)
+
+def etcd2():
+    #安装etcd3.5
+    system = r"""
+[Unit]
+Description=Etcd Server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/etcd/etcd2.conf
+ExecStart=/usr/bin/etcd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+"""
+    config = r"""
+ETCD_NAME=etcd2
+ETCD_DATA_DIR="/opt/etcd/default2.etcd"
+ETCD_LISTEN_CLIENT_URLS="http://127.0.0.1:22379"
+ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:22379"
+
+ETCD_LISTEN_PEER_URLS="http://127.0.0.1:22380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://127.0.0.1:22380"
+ETCD_INITIAL_CLUSTER="etcd1=http://127.0.0.1:12380,etcd2=http://127.0.0.1:22380,etcd3=http://127.0.0.1:32380"
+ETCD_INITIAL_CLUSTER_STATE="new"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
+"""
+    cmd1 = "echo -e " +"\'"+ system +"\'"+ " > /usr/lib/systemd/system/etcd2.service"
+    cmd2 = "echo -e " +"\'"+ config +"\'"+ " > /etc/etcd/etcd2.conf"
+    cmd3 = "systemctl daemon-reload"
+    cmd4 = "systemctl enable etcd2"
+    cmd5 = "systemctl restart etcd2"
+
+    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5
+    subprocess.call(cmd, shell = True)
+
+def etcd3():
+    #安装etcd3.5
+    system = r"""
+[Unit]
+Description=Etcd Server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/etcd/etcd3.conf
+ExecStart=/usr/bin/etcd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+"""
+    config = r"""
+ETCD_NAME=etcd3
+ETCD_DATA_DIR="/opt/etcd/default3.etcd"
+ETCD_LISTEN_CLIENT_URLS="http://127.0.0.1:32379"
+ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:32379"
+
+ETCD_LISTEN_PEER_URLS="http://127.0.0.1:32380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="http://127.0.0.1:32380"
+ETCD_INITIAL_CLUSTER="etcd1=http://127.0.0.1:12380,etcd2=http://127.0.0.1:22380,etcd3=http://127.0.0.1:32380"
+ETCD_INITIAL_CLUSTER_STATE="new"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
+"""
+    cmd1 = "echo -e " +"\'"+ system +"\'"+ " > /usr/lib/systemd/system/etcd3.service"
+    cmd2 = "echo -e " +"\'"+ config +"\'"+ " > /etc/etcd/etcd3.conf"
+    cmd3 = "systemctl daemon-reload"
+    cmd4 = "systemctl enable etcd3"
+    cmd5 = "systemctl restart etcd3"
+
+    cmd = cmd1 + "&&" + cmd2 + "&&" + cmd3 + "&&" + cmd4 + "&&" + cmd5
+    subprocess.call(cmd, shell = True)
+
+def nginx():
+    #配置nginx
+    config = r"""
+upstream etcd{
+    server  127.0.0.1:12379;
+    server  127.0.0.1:22379;
+    server  127.0.0.1:32379;
+}
+server {
+    listen  2379;
+    proxy_http_version 1.1;
+    server_name 127.0.0.1;
+    location / {
+        proxy_pass http://etcd;
+    }
+}
+"""
+    cmd1 = "echo -e " +"\'"+ config +"\'"+ " > /etc/nginx/conf.d/etcd.conf"
+    cmd2 = "nginx"
+
+    cmd = cmd1 + "&&" + cmd2
     subprocess.call(cmd, shell = True)
 
 def main():
@@ -137,7 +237,10 @@ def main():
     lua()
     go()
     mongo()
-    etcd()
+    etcd1()
+    etcd2()
+    etcd3()
+    nginx()
 
 if __name__ == "__main__":
     main()
