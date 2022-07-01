@@ -508,20 +508,20 @@ function mt:_request_stream(method, action, opts, timeout)
     end
 
     local function read_watch()
-        local success, chunk = pcall(stream._reading, stream)
+        local success, chunk = xpcall(stream.padding, debug.traceback, stream)
         if not success then
-            Log.error(reqHost .. ": request_stream error," .. chunk)
+            Log.error("padding error:%s ",chunk)
             self:_report_failure(reqHost)
             return false
         end
 
         if not chunk then
-            Log.error("chunk is nil: ")
+            Log.error("chunk is nil")
             return false
         end
 
         local data = decode_json(chunk)
-        if not data then
+        if not data or data.error then
             Log.error("failed to decode json data: " .. chunk)
             return false
         end

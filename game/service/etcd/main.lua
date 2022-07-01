@@ -63,7 +63,7 @@ local function __init__()
             end
             while true do
                 local data = reader()
-                if data.error then
+                if not data then
                     break
                 else
                     util.Table.print(data or {})
