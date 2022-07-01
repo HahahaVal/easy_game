@@ -213,12 +213,16 @@ upstream etcd{
     server  127.0.0.1:12379;
     server  127.0.0.1:22379;
     server  127.0.0.1:32379;
+    keepalive 10000;
 }
 server {
     listen  2379;
-    proxy_http_version 1.1;
     server_name 127.0.0.1;
     location / {
+        proxy_http_version 1.1;
+        proxy_connect_timeout 15;
+        proxy_read_timeout 1000;
+        proxy_send_timeout 1000;
         proxy_pass http://etcd;
     }
 }
