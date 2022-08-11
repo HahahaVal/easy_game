@@ -63,7 +63,7 @@ local function __init__()
     Env.users = Users.new()
     local id_db = MongoEx.get_game_collection("uniqueid")
     local serverid = assert(Skynet.getenv("serverid"))
-    Env.allocator = IdAllocator.new(id_db, "roleid", serverid, 24)
+    Env.allocator = IdAllocator.new(id_db, "roleid", tonumber(serverid), 24)
 
     Monitor.register("hall", atexit)
     Skynet.register ".hall"
