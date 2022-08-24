@@ -17,7 +17,7 @@ function M.post(url, data)
     if not ret then
         Log.error("post error, host:%s, url:%s, status:%s, rspData:%s", host, url, status, rspData)
     end
-    return status, rspData 
+    return status, rspData
 end
 
 return M

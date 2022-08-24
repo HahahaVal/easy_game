@@ -16,5 +16,4 @@ function M.get_game_collection(name)
     return M.get_game_db():get_collection(name)
 end
 
-
 return M

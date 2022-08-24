@@ -1,5 +1,8 @@
+local Skynet = require "znet"
 local RoleApi = require "role_api"
 local Log = require "log_api"
+local date = require "date"
+local event = require "event"
 
 local mt = {}
 mt.__index = mt
@@ -16,8 +19,19 @@ function mt:set_last_login_time(time)
     self.db_obj.last_login_time = time
 end
 
+function mt:get_last_login_time()
+    return self.db_obj.last_login_time
+end
+
 function mt:init()
+    local now = Skynet.time()
+    if not date.in_same_day(now, self:get_last_login_time()) then
+        self:daily_update()
+    end
     Log.info("role init finish")
+end
+
+function mt:daily_update()
 end
 
 function mt:fini(reason)
@@ -39,6 +53,7 @@ function M.new(fd, uid, roleid)
         uid = uid,
         roleid = roleid,
         db_obj = db_obj,
+        event = event.new(),
     }
     setmetatable(obj, mt)
     return obj

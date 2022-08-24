@@ -1,4 +1,4 @@
-local Skynet     = require "znet"
+local Skynet = require "znet"
 local Service = require "service"
 
 local service

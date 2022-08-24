@@ -1,4 +1,4 @@
-local Sys        = require "sys"
+local Sys = require "sys"
 local ServiceObj = require "service"
 local Skynet = require "znet"
 

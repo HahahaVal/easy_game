@@ -1,5 +1,3 @@
-local Skynet = require "znet"
-
 local M = {}
 
 local mt = {}

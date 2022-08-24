@@ -1,4 +1,4 @@
-local Skynet     = require "znet"
+local Skynet = require "znet"
 local Service = require "service"
 
 local service
@@ -20,7 +20,6 @@ end
 function M.add(obj)
     return service:call("add", obj)
 end
-
 
 Skynet.init(function()
 	local db_addr = Skynet.queryservice(true, "role_db")

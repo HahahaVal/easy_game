@@ -20,7 +20,6 @@ function mt:close()
     Skynet.send(self.gate, Protocol.PTYPE_GATE_NAME, "close")
 end
 
-
 local M = {}
 
 function M.new(listen_addrs, tag, max)

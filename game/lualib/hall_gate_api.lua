@@ -20,7 +20,6 @@ function mt:kick(fd)
     Skynet.send(self.gate, "text", "kick", fd)
 end
 
-
 local M = {}
 function M.new(port, tag, max_agent)
     local obj = {}

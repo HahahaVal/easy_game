@@ -1,4 +1,3 @@
-local Skynet = require "znet"
 local Node = require "srv_node"
 local Queue = require "skynet.queue"
 
@@ -31,7 +30,6 @@ function mt:put(key)
     node:dec()
     self.key_node[key] = nil
 end
-
 
 function mt:_retire_node(i)
     table.insert(self.retired_nodes, self.nodes[i])
