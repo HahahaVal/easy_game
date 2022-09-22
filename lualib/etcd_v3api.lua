@@ -88,9 +88,7 @@ local function format_params(params)
 end
 
 local function serialize_and_encode_base64(value)
-    if tab_exist(value) then
-        value = encode_json(value)
-    end
+    value = encode_json(value)
 
     if not value then
         return false
