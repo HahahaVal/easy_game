@@ -131,6 +131,14 @@ function mt:dequeue()
 	return obj
 end
 
+function mt:peek()
+	return self.index2obj[1], self.index2priority[1]
+end
+
+function mt:empty()
+	return self.size <= 0
+end
+
 function M.new(priority_func)
     local obj = {
         priority_func = priority_func,

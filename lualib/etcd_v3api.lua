@@ -101,7 +101,7 @@ local function get_real_key(prefix, key)
 end
 
 function mt:refresh_jwt_token(timeout)
-    local now = Skynet.now()
+    local now = Skynet.time()
     if self.jwt_token and now - self.last_auth_time < 60 * 3 + random(0, 60) then
         return true
     end
@@ -129,7 +129,7 @@ function mt:_get_target_status(etcd_host)
         return false
     end
     local fail_expired_time = fail_hosts[etcd_host]
-    if fail_expired_time and fail_expired_time >= Skynet.now() then
+    if fail_expired_time and fail_expired_time >= Skynet.time() then
         return false
     else
         return true
@@ -140,7 +140,7 @@ function mt:_report_failure(etcd_host)
     if type(etcd_host) ~= "string" then
         return false
     end
-    fail_hosts[etcd_host] = Skynet.now() + self.fail_time
+    fail_hosts[etcd_host] = Skynet.time() + self.fail_time
 end
 
 function mt:_choose_endpoint()

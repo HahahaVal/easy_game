@@ -1,7 +1,6 @@
-local Skynet = require "znet"
 local RoleApi = require "role_api"
 local Log = require "log_api"
-local date = require "date"
+local Date = require "date"
 local event = require "event"
 
 local mt = {}
@@ -24,8 +23,8 @@ function mt:get_last_login_time()
 end
 
 function mt:init()
-    local now = Skynet.time()
-    if not date.in_same_day(now, self:get_last_login_time()) then
+    local now = Date.time()
+    if not Date.in_same_day(now, self:get_last_login_time()) then
         self:daily_update()
     end
     Log.info("role init finish")

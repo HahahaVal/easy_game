@@ -9,6 +9,9 @@ local SECONDS_WEEK = 7 * SECONDS_DAY
 local TZ = Skynet.getenv("TZ") or 8
 local TD = TZ * SECONDS_HOUR
 
+function M.time()
+    return Skynet.time()
+end
 
 function M.in_same_day(t1, t2)
     return (t1+TD)//SECONDS_DAY == (t2+TD)//SECONDS_DAY

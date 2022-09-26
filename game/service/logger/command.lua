@@ -1,9 +1,9 @@
-local Skynet = require "znet"
 local Env = require "global"
+local Date = require "date"
 
 local function _log_time(date)
 	return string.format("%02d:%02d:%02d.%02d", date.hour, date.min, date.sec, 
-		math.floor(Skynet.time()*100%100))
+		math.floor(Date.time()*100%100))
 end
 
 local M = {}
