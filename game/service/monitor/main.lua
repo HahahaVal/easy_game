@@ -1,5 +1,4 @@
 local Skynet = require "znet"
-local Env = require "global"
 local Command = require "command"
 
 Skynet.register_protocol {

@@ -1,6 +1,8 @@
 local M = {}
 local command = {}
 
+local Skynet = nil
+
 function command.EXIT()
     local cb = M.get_exit_cb()
     if cb then
@@ -17,10 +19,9 @@ function M.get_exit_cb()
     return M.exit_cb
 end
 
-
 function M.REG(_Skynet)
     Skynet = _Skynet
-	local REG = Skynet.register_protocol {
+	Skynet.register_protocol {
         name = 'sys',
         id = 13,
         unpack = Skynet.unpack,

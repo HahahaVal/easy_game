@@ -12,8 +12,8 @@ config=$SERVER_DIR/${server}/etc/game_config
 console_port=$(grep "console_port" $config | awk '{print $3}' | sed "s/\"//g")
 stop_info=$(grep "sign_msg" $config | awk '{print $3}' | sed "s/\"//g")
 
-inject_addr=$(echo "list" | nc 0 $console_port -w 1 |grep "hall" | awk '{print $1}')
-echo "inject $inject_addr $SCRIPT_DIR/shutdown.lua" | nc 0 $console_port -w 1
+inject_addr=$(echo "list" | nc 127.0.0.1 $console_port -w 1 |grep "hall" | awk '{print $1}')
+echo "inject $inject_addr $SCRIPT_DIR/shutdown.lua" | nc 127.0.0.1 $console_port -w 1
 
 
 function check_success(){

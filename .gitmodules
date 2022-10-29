@@ -7,3 +7,6 @@
 [submodule "tool/levent"]
 	path = tool/levent
 	url = git@github.com:HahahaVal/levent.git
+[submodule "luaclib/trie_filter"]
+	path = luaclib/trie_filter
+	url = git@github.com:HahahaVal/TrieFilter.git

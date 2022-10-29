@@ -30,6 +30,7 @@ build:
 	-mkdir -p $(BUILD_CLUALIB_DIR)
 	-mkdir -p $(BUILD_CSERVICE_DIR)
 
+
 #############################skynet build
 .PHONY: skynet
 all: skynet
@@ -76,6 +77,21 @@ $(PROTO_DIR)/sproto.spb: $(CLIENT_SPROTO)
 $(PROTO_DIR)/sproto_list.lua: $(CLIENT_SPROTO)
 	LUA_PATH="$(SPROTO_DIR)/?.lua" $(LUA_BIN) $(SPROTO_DIR)/sprotodump.lua -lua $^ -o $@ -namespace
 	cp $(PROTO_DIR)/sproto_list.lua lualib/
+
+
+##########################clib build
+all: luaclib
+
+luaclib: $(BUILD_CLUALIB_DIR)/trie.so
+
+CFLAGS ?= -g -O2 -Wall -fPIC -shared -std=c++11
+
+LUACLIB_PATH=$(TOP)/luaclib
+TRIE_PATH=$(LUACLIB_PATH)/trie_filter
+INCLUDE_PATH ?= -I$(TRIE_PATH)
+
+$(BUILD_CLUALIB_DIR)/trie.so: $(TRIE_PATH)/lTrieFilter.cpp $(TRIE_PATH)/TrieFilter.cpp
+	g++ $(CFLAGS) $(INCLUDE_PATH) $^ -o $@
 
 
 ##########################levent build
