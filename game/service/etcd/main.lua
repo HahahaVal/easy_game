@@ -4,6 +4,8 @@ local Command = require "command"
 local EtcdClient = require "etcd_v3api"
 local util = require "util"
 local TimerObj = require "timer_obj"
+local Monitor = require "monitor_api"
+local Log = require "log_api"
 
 local serverid = assert(Skynet.getenv("serverid"))
 local login_port = assert(Skynet.getenv("login_port"))
@@ -12,6 +14,11 @@ local prefix = '/'
 local etcd_ttl = 10									--etcd的TTL
 local user = "root"
 local password = "123456"
+
+local function atexit()
+    Env.etcd_client:delete(prefix..serverid)
+    Log.info("etcd exit")
+end
 
 local function __init__()
     Skynet.dispatch("lua", function(session, address, cmd, ...)
@@ -79,6 +86,8 @@ local function __init__()
             Skynet.sleep(500)
         end
     end)
+
+    Monitor.register("etcd", atexit)
 end
 
 Skynet.start(__init__)

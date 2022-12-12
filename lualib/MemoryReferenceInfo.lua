@@ -142,13 +142,9 @@ end
 -- strName - The root object name that start to search, default is "_G" if leave this to nil.
 -- cObject - The root object that start to search, default is _G if leave this to nil.
 -- cDumpInfoContainer - The container of the dump result info.
-local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContainer)
+local function CollectObjectReferenceInMemory(pathTable, cursor, cObject, cDumpInfoContainer)
 	if not cObject then
 		return
-	end
-
-	if not strName then
-		strName = ""
 	end
 
 	-- Check container.
@@ -170,27 +166,31 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 	-- Get ref and name info.
 	local cRefInfoContainer = cDumpInfoContainer.m_cObjectReferenceCount
 	local cNameInfoContainer = cDumpInfoContainer.m_cObjectAddressToName
-	
+
 	local strType = type(cObject)
 	if "table" == strType then
 		-- Check table with class name.
 		if rawget(cObject, "__cname") then
 			if "string" == type(cObject.__cname) then
-				strName = strName .. "[class:" .. cObject.__cname .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = "[class:" .. cObject.__cname .. "]"
 			end
 		elseif rawget(cObject, "class") then
 			if "string" == type(cObject.class) then
-				strName = strName .. "[class:" .. cObject.class .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = "[class:" .. cObject.class .. "]"
 			end
 		elseif rawget(cObject, "_className") then
 			if "string" == type(cObject._className) then
-				strName = strName .. "[class:" .. cObject._className .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = "[class:" .. cObject._className .. "]"
 			end
 		end
 
 		-- Check if table is _G.
 		if cObject == _G then
-			strName = strName .. "[_G]"
+			cursor = cursor + 1
+			pathTable[cursor] = "[_G]"
 		end
 
 		-- Get metatable.
@@ -219,7 +219,7 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 		end
 
 		-- Set name.
-		cNameInfoContainer[cObject] = strName
+		cNameInfoContainer[cObject] = table.concat(pathTable, "", 1, cursor)
 
 		-- Dump table key and value.
 		for k, v in pairs(cObject) do
@@ -227,44 +227,54 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 			local strKeyType = type(k)
 			if "table" == strKeyType then
 				if not bWeakK then
-					CollectObjectReferenceInMemory(strName .. ".[table:key.table]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.table]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "function" == strKeyType then
 				if not bWeakK then
-					CollectObjectReferenceInMemory(strName .. ".[table:key.function]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.function]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "thread" == strKeyType then
 				if not bWeakK then
-					CollectObjectReferenceInMemory(strName .. ".[table:key.thread]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.thread]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "userdata" == strKeyType then
 				if not bWeakK then
-					CollectObjectReferenceInMemory(strName .. ".[table:key.userdata]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.userdata]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			else
-				CollectObjectReferenceInMemory(strName .. "." .. k, v, cDumpInfoContainer)
+				pathTable[cursor + 1] = "." .. k
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		if cMt then
-			CollectObjectReferenceInMemory(strName ..".[metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[metatable]"
+			CollectObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
 	elseif "function" == strType then
 		-- Get function info.
@@ -277,7 +287,8 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 		end
 
 		-- Set name.
-		cNameInfoContainer[cObject] = strName .. "[line:" .. tostring(cDInfo.linedefined) .. "@file:" .. cDInfo.short_src .. "]"
+		pathTable[cursor + 1] = string.format("[line:%s@file:%s]", cDInfo.linedefined, cDInfo.short_src)
+		cNameInfoContainer[cObject] = table.concat(pathTable, "", 1, cursor + 1)
 
 		-- Get upvalues.
 		local nUpsNum = cDInfo.nups
@@ -286,13 +297,17 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 			local strUpValueType = type(cUpValue)
 			--print(strUpName, cUpValue)
 			if "table" == strUpValueType then
-				CollectObjectReferenceInMemory(strName .. ".[ups:table:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:table:%s]", strUpName)
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "function" == strUpValueType then
-				CollectObjectReferenceInMemory(strName .. ".[ups:function:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:function:%s]", strUpName)
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "thread" == strUpValueType then
-				CollectObjectReferenceInMemory(strName .. ".[ups:thread:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:thread:%s]", strUpName)
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "userdata" == strUpValueType then
-				CollectObjectReferenceInMemory(strName .. ".[ups:userdata:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:userdata:%s]", strUpName)
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			end
 		end
 
@@ -301,7 +316,8 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectObjectReferenceInMemory(strName ..".[function:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[function:environment]"
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 	elseif "thread" == strType then
@@ -312,21 +328,23 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 		end
 
 		-- Set name.
-		cNameInfoContainer[cObject] = strName
+		cNameInfoContainer[cObject] = table.concat(pathTable, "", 1, cursor)
 
 		-- Dump environment table.
 		local getfenv = debug.getfenv
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectObjectReferenceInMemory(strName ..".[thread:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[thread:environment]"
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		local cMt = getmetatable(cObject)
 		if cMt then
-			CollectObjectReferenceInMemory(strName ..".[thread:metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[thread:metatable]"
+			CollectObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
 	elseif "userdata" == strType then
 		-- Add reference and name.
@@ -336,21 +354,23 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
 		end
 
 		-- Set name.
-		cNameInfoContainer[cObject] = strName
+		cNameInfoContainer[cObject] = table.concat(pathTable, "", 1, cursor)
 
 		-- Dump environment table.
 		local getfenv = debug.getfenv
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectObjectReferenceInMemory(strName ..".[userdata:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[userdata:environment]"
+				CollectObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		local cMt = getmetatable(cObject)
 		if cMt then
-			CollectObjectReferenceInMemory(strName ..".[userdata:metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[userdata:metatable]"
+			CollectObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
     elseif "string" == strType then
         -- Add reference and name.
@@ -360,7 +380,8 @@ local function CollectObjectReferenceInMemory(strName, cObject, cDumpInfoContain
         end
 
         -- Set name.
-        cNameInfoContainer[cObject] = strName .. "[" .. strType .. "]"
+		pathTable[cursor + 1] = string.format("[%s]", strType)
+		cNameInfoContainer[cObject] = table.concat(pathTable, "", 1, cursor + 1)
 	else
 		-- For "number" and "boolean". (If you want to dump them, uncomment the followed lines.)
 
@@ -379,13 +400,9 @@ end
 -- strName - The root object name that start to search, can not be nil.
 -- cObject - The root object that start to search, can not be nil.
 -- cDumpInfoContainer - The container of the dump result info.
-local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoContainer)
+local function CollectSingleObjectReferenceInMemory(pathTable, cursor, cObject, cDumpInfoContainer)
 	if not cObject then
 		return
-	end
-
-	if not strName then
-		strName = ""
 	end
 
 	-- Check container.
@@ -407,27 +424,31 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 	local cExistTag = cDumpInfoContainer.m_cObjectExistTag
 	local cNameAllAlias = cDumpInfoContainer.m_cObjectAliasName
 	local cAccessTag = cDumpInfoContainer.m_cObjectAccessTag
-	
+
 	local strType = type(cObject)
 	if "table" == strType then
 		-- Check table with class name.
 		if rawget(cObject, "__cname") then
 			if "string" == type(cObject.__cname) then
-				strName = strName .. "[class:" .. cObject.__cname .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = string.format("[class:%s]", cObject.__cname)
 			end
 		elseif rawget(cObject, "class") then
 			if "string" == type(cObject.class) then
-				strName = strName .. "[class:" .. cObject.class .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = string.format("[class:%s]", cObject.class)
 			end
 		elseif rawget(cObject, "_className") then
 			if "string" == type(cObject._className) then
-				strName = strName .. "[class:" .. cObject._className .. "]"
+				cursor = cursor + 1
+				pathTable[cursor] = string.format("[class:%s]", cObject._className)
 			end
 		end
 
 		-- Check if table is _G.
 		if cObject == _G then
-			strName = strName .. "[_G]"
+			cursor = cursor + 1
+			pathTable[cursor] = "[_G]"
 		end
 
 		-- Get metatable.
@@ -450,6 +471,7 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 		end
 
 		-- Check if the specified object.
+		local strName = table.concat(pathTable, "", 1, cursor)
 		if cExistTag[cObject] and (not cNameAllAlias[strName]) then
 			cNameAllAlias[strName] = true
 		end
@@ -468,49 +490,60 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 			local strKeyType = type(k)
 			if "table" == strKeyType then
 				if not bWeakK then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:key.table]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.table]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "function" == strKeyType then
 				if not bWeakK then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:key.function]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.function]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "thread" == strKeyType then
 				if not bWeakK then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:key.thread]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.thread]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			elseif "userdata" == strKeyType then
 				if not bWeakK then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:key.userdata]", k, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:key.userdata]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, k, cDumpInfoContainer)
 				end
 
 				if not bWeakV then
-					CollectSingleObjectReferenceInMemory(strName .. ".[table:value]", v, cDumpInfoContainer)
+					pathTable[cursor + 1] = ".[table:value]"
+					CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 				end
 			else
-				CollectSingleObjectReferenceInMemory(strName .. "." .. k, v, cDumpInfoContainer)
+				pathTable[cursor + 1] = "." .. k
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, v, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		if cMt then
-			CollectSingleObjectReferenceInMemory(strName ..".[metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[metatable]"
+			CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
 	elseif "function" == strType then
 		-- Get function info.
 		local cDInfo = debug.getinfo(cObject, "Su")
-		local cCombinedName = strName .. "[line:" .. tostring(cDInfo.linedefined) .. "@file:" .. cDInfo.short_src .. "]"
+		pathTable[cursor + 1] = string.format("[line:%s@file:%s]", tostring(cDInfo.linedefined), cDInfo.short_src)
+		local cCombinedName = table.concat(pathTable, "", 1, cursor + 1)
 
 		-- Check if the specified object.
 		if cExistTag[cObject] and (not cNameAllAlias[cCombinedName]) then
@@ -532,13 +565,17 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 			local strUpValueType = type(cUpValue)
 			--print(strUpName, cUpValue)
 			if "table" == strUpValueType then
-				CollectSingleObjectReferenceInMemory(strName .. ".[ups:table:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:table:%s]", strUpName)
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "function" == strUpValueType then
-				CollectSingleObjectReferenceInMemory(strName .. ".[ups:function:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:function:%s]", strUpName)
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "thread" == strUpValueType then
-				CollectSingleObjectReferenceInMemory(strName .. ".[ups:thread:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:thread:%s]", strUpName)
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			elseif "userdata" == strUpValueType then
-				CollectSingleObjectReferenceInMemory(strName .. ".[ups:userdata:" .. strUpName .. "]", cUpValue, cDumpInfoContainer)
+				pathTable[cursor + 1] = string.format(".[ups:userdata:%s]", strUpName)
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cUpValue, cDumpInfoContainer)
 			end
 		end
 
@@ -547,11 +584,13 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectSingleObjectReferenceInMemory(strName ..".[function:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[function:environment]"
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 	elseif "thread" == strType then
 		-- Check if the specified object.
+		local strName = table.concat(pathTable, "", 1, cursor)
 		if cExistTag[cObject] and (not cNameAllAlias[strName]) then
 			cNameAllAlias[strName] = true
 		end
@@ -569,17 +608,20 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectSingleObjectReferenceInMemory(strName ..".[thread:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[thread:environment]"
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		local cMt = getmetatable(cObject)
 		if cMt then
-			CollectSingleObjectReferenceInMemory(strName ..".[thread:metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[thread:metatable]"
+			CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
 	elseif "userdata" == strType then
 		-- Check if the specified object.
+		local strName = table.concat(pathTable, "", 1, cursor)
 		if cExistTag[cObject] and (not cNameAllAlias[strName]) then
 			cNameAllAlias[strName] = true
 		end
@@ -597,17 +639,20 @@ local function CollectSingleObjectReferenceInMemory(strName, cObject, cDumpInfoC
 		if getfenv then
 			local cEnv = getfenv(cObject)
 			if cEnv then
-				CollectSingleObjectReferenceInMemory(strName ..".[userdata:environment]", cEnv, cDumpInfoContainer)
+				pathTable[cursor + 1] = ".[userdata:environment]"
+				CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cEnv, cDumpInfoContainer)
 			end
 		end
 
 		-- Dump metatable.
 		local cMt = getmetatable(cObject)
 		if cMt then
-			CollectSingleObjectReferenceInMemory(strName ..".[userdata:metatable]", cMt, cDumpInfoContainer)
+			pathTable[cursor + 1] = ".[userdata:metatable]"
+			CollectSingleObjectReferenceInMemory(pathTable, cursor + 1, cMt, cDumpInfoContainer)
 		end
     elseif "string" == strType then
         -- Check if the specified object.
+		local strName = table.concat(pathTable, "", 1, cursor)
         if cExistTag[cObject] and (not cNameAllAlias[strName]) then
             cNameAllAlias[strName] = true
         end
@@ -959,9 +1004,6 @@ end
 -- strRootObjectName - The root object name that start to search, default is "_G" if leave this to nil.
 -- cRootObject - The root object that start to search, default is _G if leave this to nil.
 local function DumpMemorySnapshot(strSavePath, strExtraFileName, nMaxRescords, strRootObjectName, cRootObject)
-	-- Get time format string.
-	local strDateTime = FormatDateTimeNow()
-
 	-- Check root object.
 	if cRootObject then
 		if (not strRootObjectName) or (0 == string.len(strRootObjectName)) then
@@ -980,8 +1022,10 @@ local function DumpMemorySnapshot(strSavePath, strExtraFileName, nMaxRescords, s
 		cDumpInfoContainer.m_nCurrentLine = cStackInfo.currentline
 	end
 
+	local pathTable = {strRootObjectName}
+	local cursor = 1
 	-- Collect memory info.
-	CollectObjectReferenceInMemory(strRootObjectName, cRootObject, cDumpInfoContainer)
+	CollectObjectReferenceInMemory(pathTable, cursor, cRootObject, cDumpInfoContainer)
 
 	-- Dump the result.
 	OutputMemorySnapshot(strSavePath, strExtraFileName, nMaxRescords, strRootObjectName, cRootObject, nil, cDumpInfoContainer)
@@ -1029,9 +1073,6 @@ local function DumpMemorySnapshotSingleObject(strSavePath, strExtraFileName, nMa
 		strObjectName = GetOriginalToStringResult(cObject)
 	end
 
-	-- Get time format string.
-	local strDateTime = FormatDateTimeNow()
-
 	-- Create container.
 	local cDumpInfoContainer = CreateSingleObjectReferenceInfoContainer(strObjectName, cObject)
 	local cStackInfo = debug.getinfo(2, "Sl")
@@ -1041,8 +1082,10 @@ local function DumpMemorySnapshotSingleObject(strSavePath, strExtraFileName, nMa
 	end
 
 	-- Collect memory info.
-	CollectSingleObjectReferenceInMemory("registry", debug.getregistry(), cDumpInfoContainer)
-	
+	local pathTable = {"registry"}
+	local cursor = 1
+	CollectSingleObjectReferenceInMemory(pathTable, cursor, debug.getregistry(), cDumpInfoContainer)
+
 	-- Dump the result.
 	OutputMemorySnapshotSingleObject(strSavePath, strExtraFileName, nMaxRescords, cDumpInfoContainer)
 end

@@ -3,16 +3,14 @@ root = "./"
 branch = root .. "game/"
 
 lualoader = root .. "skynet/lualib/loader.lua"
-snax = root.."service/?.lua;"..root.."service/?/main.lua;"
 
 lua_cpath = root .. "build/clualib/?.so"
 cpath = root.."build/cservice/?.so"
 
 lua_path = root.."lualib/?.lua;" .. branch.."lualib/?.lua;" .. root.."skynet/lualib/?.lua;"
-luaservice = branch.."service/?.lua;" .. branch.."service/?/main.lua;" .. root.."skynet/service/?.lua;" 
+luaservice = branch.."service/?.lua;" .. branch.."service/?/main.lua;" .. root.."skynet/service/?.lua;"
 
 bootstrap = "snlua bootstrap"	-- The service for bootstrap
-
 
 -- sproto
 protopath = root .. "build/sproto/sproto.spb"
